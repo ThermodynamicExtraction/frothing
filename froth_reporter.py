@@ -15,48 +15,54 @@ class FrothingAgent:
             return f"Error: {e}"
 
     def parse_metrics(self, raw_html):
-        # Default values
-        data = {"wvht": 0.0, "swp": 0.0, "apd": 0.0}
+        data = {"wvht": 0.0, "swp": 0.0, "apd": 0.0, "wdir": "N/A", "wspd": 0.0}
         
-        # NOAA Mobile Parsing
+        # Regex for Wind and Waves
         height = re.search(r'Seas: ([\d.]+) ft', raw_html)
         sw_period = re.search(r'Swell Period: ([\d.]+) sec', raw_html)
         avg_period = re.search(r'Period: ([\d.]+) sec', raw_html)
+        wind_dir = re.search(r'Wind: (\w+) at', raw_html)
+        wind_speed = re.search(r'at ([\d.]+) kts', raw_html)
 
         if height: data["wvht"] = float(height.group(1))
         if sw_period: data["swp"] = float(sw_period.group(1))
         if avg_period: data["apd"] = float(avg_period.group(1))
+        if wind_dir: data["wdir"] = wind_dir.group(1)
+        if wind_speed: data["wspd"] = float(wind_speed.group(1))
         
         return data
 
     def analyze_surf(self, d):
-        # The 'Frothing' Logic: Weighting Period over Height
-        # A 1ft wave at 10s has more energy than a 3ft wave at 3s.
-        
         height = d["wvht"]
-        # Use Swell Period if available, otherwise fallback to Average Period
         period = d["swp"] if d["swp"] > 0 else d["apd"]
-        
-        # Calculate a 'Froth Index' (Simplified Energy Metric)
-        # Power is proportional to Period^2 * Height, but let's keep it simple:
-        froth_score = height * period
+        wdir = d["wdir"]
+        wspd = d["wspd"]
 
-        if period >= 9.0 and height >= 0.5:
-            return "💎 DIAMOND IN THE ROUGH: Long period groundswell detected. It looks small on paper, but the lines will be clean. GO NOW."
-        elif froth_score > 12:
-            return "🔥 FROTHING: Solid combo of size and energy. Get out there."
-        elif froth_score > 5:
-            return "🛹 CHOPPY/LOGGABLE: Not great, but surfable on a longboard or a twin fin."
-        elif height < 1.0 or period < 4.0:
-            return "🛹 SKATEBOARD DAY: It's a lake. Hit the pavement instead."
+        # 🌬️ WIND LOGIC (Specific to Egmont/FL West Coast)
+        # Offshore (E, NE, SE) = Clean/Groomed
+        # Onshore (W, NW, SW) = Choppy/Blown out
+        is_offshore = any(dir in wdir for dir in ["E", "NE", "SE"])
+        is_howling = wspd > 15
+
+        status = ""
+        
+        if height < 1.0:
+            status = "🛹 SKATEBOARD WEATHER. It's a lake. Hit the concrete."
+        elif is_offshore and period >= 6.0:
+            status = "💎 TOTAL FROTH: Clean groundswell with offshore winds. Go now!"
+        elif is_offshore and period < 6.0:
+            status = "🌊 CLEAN BUT SMALL: The wind is grooming it, but there's not much size."
+        elif not is_offshore and is_howling:
+            status = "🌪️ BLOWN OUT: Too much onshore wind. It's just a washing machine out there."
         else:
-            return "🤷 MUSH: Wait for the tide to change or just stay home."
+            status = "🤔 SEMI-CLEAN: It's rideable, but don't quit your day job."
+
+        return f"{status}\n[Wind: {wdir} @ {wspd} kts]"
 
     def run(self):
         print(f"--- 🌊 Frothing Report: Station {self.station_id} ---")
         raw = self.fetch_data()
         metrics = self.parse_metrics(raw)
-        
         print(f"Height: {metrics['wvht']}ft | Period: {max(metrics['swp'], metrics['apd'])}s")
         print("-" * 40)
         print(self.analyze_surf(metrics))
