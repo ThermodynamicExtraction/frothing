@@ -1,5 +1,6 @@
 import requests
 import re
+from datetime import datetime
 
 class FrothingAgent:
     def __init__(self, station_id="42098"):
@@ -8,64 +9,74 @@ class FrothingAgent:
 
     def fetch_data(self):
         try:
-            response = requests.get(self.url)
-            response.raise_for_status()
-            return response.text
-        except Exception as e:
-            return f"Error: {e}"
+            res = requests.get(self.url)
+            res.raise_for_status()
+            return res.text
+        except: return ""
 
-    def parse_metrics(self, raw_html):
-        data = {"wvht": 0.0, "swp": 0.0, "apd": 0.0, "wdir": "N/A", "wspd": 0.0}
+    def parse(self, html):
+        # Extract metrics using regex
+        h = re.search(r'Seas: ([\d.]+) ft', html)
+        p = re.search(r'Period: ([\d.]+) sec', html)
+        sp = re.search(r'Swell Period: ([\d.]+) sec', html)
+        wd = re.search(r'Wind: (\w+) at', html)
+        ws = re.search(r'at ([\d.]+) kts', html)
         
-        # Regex for Wind and Waves
-        height = re.search(r'Seas: ([\d.]+) ft', raw_html)
-        sw_period = re.search(r'Swell Period: ([\d.]+) sec', raw_html)
-        avg_period = re.search(r'Period: ([\d.]+) sec', raw_html)
-        wind_dir = re.search(r'Wind: (\w+) at', raw_html)
-        wind_speed = re.search(r'at ([\d.]+) kts', raw_html)
+        return {
+            "wvht": h.group(1) if h else "0.0",
+            "apd": p.group(1) if p else "0.0",
+            "swp": sp.group(1) if sp else "0.0",
+            "wdir": wd.group(1) if wd else "N/A",
+            "wspd": ws.group(1) if ws else "0.0",
+            "time": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        }
 
-        if height: data["wvht"] = float(height.group(1))
-        if sw_period: data["swp"] = float(sw_period.group(1))
-        if avg_period: data["apd"] = float(avg_period.group(1))
-        if wind_dir: data["wdir"] = wind_dir.group(1)
-        if wind_speed: data["wspd"] = float(wind_speed.group(1))
+    def get_rec(self, d):
+        h, p = float(d["wvht"]), float(d["swp"] if d["swp"] != "0.0" else d["apd"])
+        offshore = any(x in d["wdir"] for x in ["E", "NE", "SE"])
         
-        return data
+        if h < 1.0 and p < 8.0: return "STATUS: SKATEBOARD_ONLY // LAKE_EFFECT"
+        if offshore and p >= 7.0: return "STATUS: ABSOLUTE_FROTH // GO_NOW"
+        if offshore: return "STATUS: CLEAN_BUT_SMALL // LOG_IT"
+        if p >= 8.0: return "STATUS: SNEAKY_GROUNDSWELL // CHECK_BARS"
+        return "STATUS: NOT_GREAT // SKIP_IT"
 
-    def analyze_surf(self, d):
-        height = d["wvht"]
-        period = d["swp"] if d["swp"] > 0 else d["apd"]
-        wdir = d["wdir"]
-        wspd = d["wspd"]
-
-        # 🌬️ WIND LOGIC (Specific to Egmont/FL West Coast)
-        # Offshore (E, NE, SE) = Clean/Groomed
-        # Onshore (W, NW, SW) = Choppy/Blown out
-        is_offshore = any(dir in wdir for dir in ["E", "NE", "SE"])
-        is_howling = wspd > 15
-
-        status = ""
-        
-        if height < 1.0:
-            status = "🛹 SKATEBOARD WEATHER. It's a lake. Hit the concrete."
-        elif is_offshore and period >= 6.0:
-            status = "💎 TOTAL FROTH: Clean groundswell with offshore winds. Go now!"
-        elif is_offshore and period < 6.0:
-            status = "🌊 CLEAN BUT SMALL: The wind is grooming it, but there's not much size."
-        elif not is_offshore and is_howling:
-            status = "🌪️ BLOWN OUT: Too much onshore wind. It's just a washing machine out there."
-        else:
-            status = "🤔 SEMI-CLEAN: It's rideable, but don't quit your day job."
-
-        return f"{status}\n[Wind: {wdir} @ {wspd} kts]"
+    def generate_html(self, d):
+        recommendation = self.get_rec(d)
+        html_content = f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>FROTHING // ST_{self.station_id}</title>
+    <style>
+        body {{ background-color: #F9F9F7; color: #000000; font-family: 'Space Mono', monospace; margin: 0; padding: 20px; display: flex; justify-content: center; }}
+        .container {{ width: 100%; max-width: 500px; border: 1px solid #000000; padding: 20px; }}
+        header {{ border-bottom: 1px solid #000000; margin-bottom: 20px; padding-bottom: 10px; font-weight: bold; }}
+        .status-box {{ border: 1px solid #000000; padding: 15px; margin-bottom: 20px; background: #FFFFFF; font-weight: bold; }}
+        .data-row {{ display: flex; justify-content: space-between; border-bottom: 1px solid #000000; padding: 8px 0; font-size: 0.9rem; }}
+        .label {{ text-transform: uppercase; }}
+        footer {{ margin-top: 20px; font-size: 0.7rem; text-transform: uppercase; }}
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>FROTHING_SYSTEM_v1.0 // ST_{self.station_id}</header>
+        <div class="status-box">{recommendation}</div>
+        <div class="data-row"><span class="label">Height:</span><span>{d['wvht']} FT</span></div>
+        <div class="data-row"><span class="label">Period:</span><span>{d['swp'] if d['swp'] != "0.0" else d['apd']} SEC</span></div>
+        <div class="data-row"><span class="label">Wind:</span><span>{d['wdir']} @ {d['wspd']} KTS</span></div>
+        <footer>UPDATED: {d['time']} // SOURCE: NOAA_NDBC</footer>
+    </div>
+</body>
+</html>"""
+        with open("index.html", "w") as f:
+            f.write(html_content)
 
     def run(self):
-        print(f"--- 🌊 Frothing Report: Station {self.station_id} ---")
         raw = self.fetch_data()
-        metrics = self.parse_metrics(raw)
-        print(f"Height: {metrics['wvht']}ft | Period: {max(metrics['swp'], metrics['apd'])}s")
-        print("-" * 40)
-        print(self.analyze_surf(metrics))
+        data = self.parse(raw)
+        self.generate_html(data)
+        print("Inventory Updated: index.html generated.")
 
 if __name__ == "__main__":
     FrothingAgent().run()
