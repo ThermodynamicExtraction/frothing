@@ -13,3 +13,8 @@ Frothing analyzes the relationship between:
 - **WVHT (Significant Wave Height):** The raw size.
 - **APD (Average Period):** The energy. Anything under 4s is usually wind-slop.
 - **SwD (Swell Direction):** For Florida's West Coast, direction is everything.
+
+## Logic Engine
+Groundswell detection: (Period > 8s)
+Wind: (Detection of E/NE/SE offshore winds)
+The 'Skateboard' Fallback: (Automatic alert when the Gulf is flat)
