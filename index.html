@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>FROTHING // STATION_42098</title>
+    <style>
+        /* Minitel Light Aesthetic */
+        body {
+            background-color: #F9F9F7;
+            color: #000000;
+            font-family: 'JetBrains Mono', 'IBM Plex Mono', 'Space Mono', monospace;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 600px;
+            border: 1px solid #000000;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        header {
+            border-bottom: 1px solid #000000;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+        }
+
+        h1 {
+            font-size: 1.2rem;
+            margin: 0;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .status-box {
+            border: 1px solid #000000;
+            padding: 15px;
+            margin: 20px 0;
+            background: #FFFFFF;
+        }
+
+        .data-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 10px;
+        }
+
+        .data-row {
+            display: flex;
+            justify-content: space-between;
+            border-bottom: 1px dashed #CCCCCC;
+            padding: 5px 0;
+        }
+
+        .label { font-weight: bold; text-transform: uppercase; }
+        .value { color: #000000; }
+
+        footer {
+            margin-top: 20px;
+            font-size: 0.7rem;
+            opacity: 0.6;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <header>
+            <h1>FROTHING_SYSTEM_v1.0</h1>
+            <div>LOC: EGMONT_CHANNEL_FL // ST_42098</div>
+        </header>
+
+        <div class="status-box">
+            <span class="label">RECOMMENDATION:</span>
+            <div id="surf-status">ANALYZING_BUOY_DATA...</div>
+        </div>
+
+        <div class="data-grid">
+            <div class="data-row"><span class="label">WVHT:</span><span class="value">0.7 FT</span></div>
+            <div class="data-row"><span class="label">SWP:</span><span class="value">10.0 SEC</span></div>
+            <div class="data-row"><span class="label">WDIR:</span><span class="value">ENE</span></div>
+            <div class="data-row"><span class="label">WSPD:</span><span class="value">12.4 KTS</span></div>
+            <div class="data-row"><span class="label">TEMP:</span><span class="value">68.2 F</span></div>
+        </div>
+
+        <footer>
+            AUTO_GEN_REO_03032026 // SOURCE: NOAA_NDBC
+        </footer>
+    </div>
+
+</body>
+</html>
