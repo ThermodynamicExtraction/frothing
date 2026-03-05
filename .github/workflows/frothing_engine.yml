@@ -1,0 +1,28 @@
+name: Frothing_Engine_v2
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  run_sync:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v4
+        with:
+          python-version: '3.9'
+      - run: pip install requests
+      - run: python froth_reporter.py
+      - name: Save_Data
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          git config --global user.name "bot"
+          git config --global user.email "bot@frothing.io"
+          git remote set-url origin https://x-access-token:${GITHUB_TOKEN}@github.com/${{ github.repository }}.git
+          git add index.html
+          git commit -m "STATION_42098_UPDATE [skip ci]" || exit 0
+          git push origin main
