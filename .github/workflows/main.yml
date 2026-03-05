@@ -1,0 +1,35 @@
+name: Frothing Automated Reporter
+
+on:
+  schedule:
+    # This runs the script every 6 hours (at minute 0)
+    - cron: '0 */6 * * *' 
+  workflow_dispatch: # This allows you to click a button to run it manually
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write # Important: Gives the robot permission to update index.html
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.9'
+
+      - name: Install Dependencies
+        run: pip install requests
+
+      - name: Run Frothing Script
+        run: python froth_reporter.py
+
+      - name: Update Minitel Dashboard
+        run: |
+          git config --global user.name "Frothing-Bot"
+          git config --global user.email "bot@frothing.io"
+          git add index.html
+          git commit -m "STATION_42098: Data Inventory Updated" || exit 0
+          git push
