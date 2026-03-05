@@ -37,12 +37,17 @@ jobs:
           git config --global user.email "bot@frothing.io"
           git remote set-url origin https://x-access-token:${GITHUB_TOKEN}@github.com/${{ github.repository }}.git
           
-          # This ensures we are on the latest version before adding
+          # 1. Hide the new index.html for a moment
+          git add index.html
+          git stash
+          
+          # 2. Sync with the cloud
           git pull origin main --rebase
           
-          git add index.html
-          # The 'status' check tells us if there are actually changes to save
-          git status
+          # 3. Bring the new index.html back
+          git stash pop || echo "Nothing to pop"
           
-          git commit -m "STATION_42098: Data Inventory Updated [skip ci]" || echo "No changes detected. Skipping push."
+          # 4. Save and Push
+          git add index.html
+          git commit -m "STATION_42098: Data Inventory Updated [skip ci]" || echo "No changes detected."
           git push origin main
