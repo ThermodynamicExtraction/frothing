@@ -31,15 +31,21 @@ jobs:
 
       - name: Update Minitel Dashboard
         env:
-          # This tells the robot to use its secret "ID Badge"
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} 
         run: |
+          # 1. Check if the file actually exists
+          ls -la 
+          
           git config --global user.name "FROTHING_SYSTEM_v1"
           git config --global user.email "bot@frothing.io"
-          
-          # This line injects the token into the URL so GitHub recognizes the robot
           git remote set-url origin https://x-access-token:${GITHUB_TOKEN}@github.com/${{ github.repository }}.git
           
-          git add index.html
-          git commit -m "STATION_42098: Data Inventory Updated [skip ci]" || exit 0
-          git push origin main
+          # 2. Only try to add if the file exists to avoid Error 128
+          if [ -f index.html ]; then
+            git add index.html
+            git commit -m "STATION_42098: Data Inventory Updated [skip ci]" || exit 0
+            git push origin main
+          else
+            echo "ERROR: index.html was not found in the root directory."
+            exit 1
+          fi
