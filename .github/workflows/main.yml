@@ -33,19 +33,20 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} 
         run: |
-          # 1. Check if the file actually exists
-          ls -la 
-          
           git config --global user.name "FROTHING_SYSTEM_v1"
           git config --global user.email "bot@frothing.io"
           git remote set-url origin https://x-access-token:${GITHUB_TOKEN}@github.com/${{ github.repository }}.git
           
-          # 2. Only try to add if the file exists to avoid Error 128
+          # Force sync with the latest repo state
+          git fetch origin main
+          git reset --soft origin/main
+          
           if [ -f index.html ]; then
             git add index.html
-            git commit -m "STATION_42098: Data Inventory Updated [skip ci]" || exit 0
-            git push origin main
+            # We add [skip ci] to prevent the bot from triggering itself in a loop
+            git commit -m "STATION_42098: Data Inventory Updated [skip ci]" || echo "No changes to commit"
+            git push origin main --force
           else
-            echo "ERROR: index.html was not found in the root directory."
+            echo "ERROR: index.html not found."
             exit 1
           fi
