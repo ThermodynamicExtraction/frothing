@@ -30,10 +30,16 @@ jobs:
         run: python froth_reporter.py
 
       - name: Update Minitel Dashboard
+        env:
+          # This tells the robot to use its secret "ID Badge"
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} 
         run: |
           git config --global user.name "FROTHING_SYSTEM_v1"
           git config --global user.email "bot@frothing.io"
-          git pull origin main --rebase  # Syncs the robot with any changes you made
+          
+          # This line injects the token into the URL so GitHub recognizes the robot
+          git remote set-url origin https://x-access-token:${GITHUB_TOKEN}@github.com/${{ github.repository }}.git
+          
           git add index.html
           git commit -m "STATION_42098: Data Inventory Updated [skip ci]" || exit 0
           git push origin main
