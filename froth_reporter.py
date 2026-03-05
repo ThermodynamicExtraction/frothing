@@ -1,9 +1,9 @@
 import requests
 from datetime import datetime
+import config # Centralized settings
 
 def generate_report():
-    station_id = "42098"
-    # The 'Real-Time' text page is much easier for a bot to read than the flashy dashboard
+    station_id = config.STATION_ID
     url = f"https://www.ndbc.noaa.gov/data/realtime2/{station_id}.txt"
     
     data = {
@@ -12,17 +12,19 @@ def generate_report():
     }
 
     try:
-        # We fetch the raw data file directly. It looks like a spreadsheet.
         response = requests.get(url, timeout=15)
         response.raise_for_status()
         lines = response.readlines()
 
-        # The second line is the header, the third line is the most recent data
         if len(lines) >= 3:
+            # Line 0: Header 1, Line 1: Header 2 (Units), Line 2: Latest Data
             latest_data = lines[2].decode('utf-8').split()
-            # Column mapping for NOAA .txt files:
-            # 5: WDIR, 6: WSPD, 8: WVHT, 9: DPD (Period)
-            data["wvht"] = latest_data[8]
+            
+            # NOAA Metric to Imperial Conversion (Meters to Feet)
+            raw_wvht = latest_data[8]
+            if raw_wvht != "MM": # MM is NOAA's code for missing data
+                data["wvht"] = round(float(raw_wvht) * 3.28084, 1)
+            
             data["swp"] = latest_data[9]
             data["wdir"] = latest_data[5]
             data["wspd"] = latest_data[6]
@@ -32,7 +34,6 @@ def generate_report():
     except Exception as e:
         print(f"SCRAPE_FAILED: {e}")
 
-    # Generate the Minitel HTML
     html_content = f"""<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -49,7 +50,7 @@ def generate_report():
 <body>
     <div class="inventory">
         <div class="header">FROTHING_STATION_REPORT // {station_id}</div>
-        <div class="row"><span>WAVE_HEIGHT:</span><span>{data['wvht']} M</span></div>
+        <div class="row"><span>WAVE_HEIGHT:</span><span>{data['wvht']} FT</span></div>
         <div class="row"><span>SWELL_PERIOD:</span><span>{data['swp']} SEC</span></div>
         <div class="row"><span>WIND_COND:</span><span>{data['wdir']} @ {data['wspd']} KTS</span></div>
         <div class="row"><span>TIMESTAMP:</span><span>{data['time']}</span></div>
