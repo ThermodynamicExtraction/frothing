@@ -33,6 +33,7 @@ jobs:
         run: |
           git config --global user.name "FROTHING_SYSTEM_v1"
           git config --global user.email "bot@frothing.io"
+          git pull origin main --rebase  # Syncs the robot with any changes you made
           git add index.html
-          git commit -m "STATION_42098: Data Inventory Updated" || exit 0
-          git push
+          git commit -m "STATION_42098: Data Inventory Updated [skip ci]" || exit 0
+          git push origin main
