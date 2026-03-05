@@ -1,7 +1,8 @@
-name: Frothing_Final_v1
+name: FROTHING_TEST_FINAL
 on:
   push:
-    branches: [main]
+    branches:
+      - main
   workflow_dispatch:
 
 jobs:
