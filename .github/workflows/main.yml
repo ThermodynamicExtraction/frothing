@@ -28,7 +28,7 @@ jobs:
 
       - name: Update Minitel Dashboard
         run: |
-          git config --global user.name "Frothing-Bot"
+          git config --global user.name "FROTHING_SYSTEM_v1"
           git config --global user.email "bot@frothing.io"
           git add index.html
           git commit -m "STATION_42098: Data Inventory Updated" || exit 0
