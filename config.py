@@ -9,4 +9,4 @@ LONG_PERIOD_THRESHOLD = 8.0 # sec
 WIND_CHOP_MAX_PERIOD = 4.0  # sec
 
 # Personality Settings
-STYLE = "salty_surfer_v2"
+STYLE = "salty_surfer_v3"
