@@ -17,19 +17,19 @@ def generate_report():
         response.raise_for_status()
         text = response.text
 
-        # Improved Regex: Looks for the numeric value following common NOAA labels
-        # wvht: Significant Wave Height (ft)
-        wvht = re.search(r'Wave Height \(WVHT\):</td><td class="data">([\d.]+) ft', text)
-        # swp: Dominant Wave Period (sec)
-        swp = re.search(r'Dominant Wave Period \(DPD\):</td><td class="data">([\d.]+) sec', text)
-        # wind: Wind Direction and Speed
-        wind = re.search(r'Wind Direction \(WDIR\):</td><td class="data">(\w+) \(.*\)</td>', text)
-        speed = re.search(r'Wind Speed \(WSPD\):</td><td class="data">([\d.]+) kts', text)
+        # 42098 specific patterns - looking for the raw text in the table cells
+        # We use [^<]+ to grab everything inside the <td> until the next tag
+        wvht = re.search(r'Wave Height \(WVHT\):.*?<td class="data">([^<]+)</td>', text, re.S)
+        swp = re.search(r'Dominant Wave Period \(DPD\):.*?<td class="data">([^<]+)</td>', text, re.S)
+        wdir = re.search(r'Wind Direction \(WDIR\):.*?<td class="data">(\w+)', text, re.S)
+        wspd = re.search(r'Wind Speed \(WSPD\):.*?<td class="data">([^<]+) kts', text, re.S)
 
-        if wvht: data["wvht"] = wvht.group(1)
-        if swp: data["swp"] = swp.group(1)
-        if wind: data["wdir"] = wind.group(1)
-        if speed: data["wspd"] = speed.group(1)
+        if wvht: data["wvht"] = wvht.group(1).strip()
+        if swp: data["swp"] = swp.group(1).strip()
+        if wdir: data["wdir"] = wdir.group(1).strip()
+        if wspd: data["wspd"] = wspd.group(1).strip()
+            
+        print(f"SCRAPE_RESULT: {data['wvht']} ft @ {data['swp']} sec")
             
     except Exception as e:
         print(f"FETCH_ERROR: {e}")
