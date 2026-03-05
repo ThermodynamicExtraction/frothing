@@ -3,38 +3,36 @@ from datetime import datetime
 
 def generate_report():
     station_id = "42098"
-    url = f"https://www.ndbc.noaa.gov/station_page.php?station={station_id}"
+    # The 'Real-Time' text page is much easier for a bot to read than the flashy dashboard
+    url = f"https://www.ndbc.noaa.gov/data/realtime2/{station_id}.txt"
     
-    # 1. Setup Defaults
     data = {
         "wvht": "N/A", "swp": "N/A", "wdir": "N/A", "wspd": "N/A",
         "time": datetime.now().strftime("%Y-%m-%d %H:%M")
     }
 
-    # 2. Scrape Data
     try:
+        # We fetch the raw data file directly. It looks like a spreadsheet.
         response = requests.get(url, timeout=15)
         response.raise_for_status()
-        text = response.text
+        lines = response.readlines()
 
-        if "Wave Height (WVHT):" in text:
-            data["wvht"] = text.split("Wave Height (WVHT):")[1].split('class="data">')[1].split(' ft')[0].strip()
-        
-        if "Dominant Wave Period (DPD):" in text:
-            data["swp"] = text.split("Dominant Wave Period (DPD):")[1].split('class="data">')[1].split(' sec')[0].strip()
-            
-        if "Wind Direction (WDIR):" in text:
-            data["wdir"] = text.split("Wind Direction (WDIR):")[1].split('class="data">')[1].split(' (')[0].strip()
-
-        if "Wind Speed (WSPD):" in text:
-            data["wspd"] = text.split("Wind Speed (WSPD):")[1].split('class="data">')[1].split(' kts')[0].strip()
+        # The second line is the header, the third line is the most recent data
+        if len(lines) >= 3:
+            latest_data = lines[2].decode('utf-8').split()
+            # Column mapping for NOAA .txt files:
+            # 5: WDIR, 6: WSPD, 8: WVHT, 9: DPD (Period)
+            data["wvht"] = latest_data[8]
+            data["swp"] = latest_data[9]
+            data["wdir"] = latest_data[5]
+            data["wspd"] = latest_data[6]
             
         print(f"SCRAPE_SUCCESS: {data['wvht']}ft @ {data['swp']}s")
             
     except Exception as e:
         print(f"SCRAPE_FAILED: {e}")
 
-    # 3. Generate the Minitel HTML
+    # Generate the Minitel HTML
     html_content = f"""<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -51,23 +49,20 @@ def generate_report():
 <body>
     <div class="inventory">
         <div class="header">FROTHING_STATION_REPORT // {station_id}</div>
-        <div class="row"><span>WAVE_HEIGHT:</span><span>{data['wvht']} FT</span></div>
+        <div class="row"><span>WAVE_HEIGHT:</span><span>{data['wvht']} M</span></div>
         <div class="row"><span>SWELL_PERIOD:</span><span>{data['swp']} SEC</span></div>
         <div class="row"><span>WIND_COND:</span><span>{data['wdir']} @ {data['wspd']} KTS</span></div>
         <div class="row"><span>TIMESTAMP:</span><span>{data['time']}</span></div>
         <div class="legal">
             WARNING: SURFING IS DANGEROUS. INTERPRETIVE DATA ONLY. 
-            USER ASSUMES ALL RISK. VISUAL CHECK REQUIRED.
+            USER ACCUMES ALL RISK. VISUAL CHECK REQUIRED.
         </div>
     </div>
 </body>
 </html>"""
 
-    # 4. Write to File
     with open("index.html", "w", encoding="utf-8") as f:
         f.write(html_content)
-    
-    print("SUCCESS: index.html updated.")
 
 if __name__ == "__main__":
     generate_report()
