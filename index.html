@@ -8,7 +8,9 @@
         .inventory { border: 2px solid #000; padding: 20px; max-width: 480px; background: #fff; box-shadow: 10px 10px 0px #000; }
         .header { font-weight: bold; border-bottom: 2px solid #000; padding-bottom: 10px; margin-bottom: 10px; font-size: 1.2em; }
         .row { display: flex; justify-content: space-between; border-bottom: 1px solid #000; padding: 4px 0; }
-        .rec { margin-top: 20px; padding: 15px; border: 2px solid #000; text-align: center; font-weight: bold; font-size: 1.2em; text-transform: uppercase; }
+        .rec-box { margin-top: 15px; border: 2px solid #000; text-align: center; font-weight: bold; overflow: hidden; }
+        .rec-label { font-size: 0.8em; border-bottom: 1px solid #000; padding: 2px; background: #eee; }
+        .rec-val { padding: 10px; font-size: 1.1em; text-transform: uppercase; }
         .legal { font-size: 9px; margin-top: 20px; opacity: 0.6; text-transform: uppercase; }
     </style>
 </head>
@@ -16,18 +18,21 @@
     <div class="inventory">
         <div class="header">FROTHING_STATION_REPORT // 42098</div>
         
-        <div class="row"><span>SIG_WAVE_HEIGHT:</span><span>1.0 FT</span></div>
+        <div class="row"><span>WAVE_HEIGHT:</span><span>1.0 FT</span></div>
         <div class="row"><span>SWELL_PERIOD:</span><span>6.0 SEC</span></div>
-        <div class="row"><span>AVG_PERIOD (APD):</span><span>3.0 SEC</span></div>
+        <div class="row"><span>SURFACE_STATE:</span><span>GLASSY</span></div>
         <div class="row"><span>WIND_COND:</span><span>CALM</span></div>
+        <div class="row"><span>WATER_TEMP:</span><span>67.8°F</span></div>
+        <div class="row" style="border-bottom: 2px solid #000;"><span>TIMESTAMP:</span><span>2026-03-06 15:25</span></div>
         
-        <div class="row"><span>AIR_TEMP:</span><span>70.9°F</span></div>
-        <div class="row"><span>WATER_TEMP:</span><span>67.6°F</span></div>
-        
-        <div class="row" style="border-bottom: 2px solid #000;"><span>TIMESTAMP:</span><span>2026-03-06 15:17</span></div>
-        
-        <div class="rec" style="background: #FFA500;">
-            MAYBE: BRING THE LOG
+        <div class="rec-box">
+            <div class="rec-label">ACTION_RECOMMENDATION</div>
+            <div class="rec-val" style="background: #FFA500;">MAYBE: BRING THE LOG</div>
+        </div>
+
+        <div class="rec-box">
+            <div class="rec-label">SUGGESTED_KIT</div>
+            <div class="rec-val" style="background: #fff;">3/2 FULLSUIT</div>
         </div>
 
         <div class="legal">
