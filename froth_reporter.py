@@ -4,7 +4,6 @@ import config
 
 def generate_report():
     station_id = config.STATION_ID
-    # Fetching the 'realtime2' text file (Raw observations)
     url = f"https://www.ndbc.noaa.gov/data/realtime2/{station_id}.txt"
     
     data = {
@@ -18,34 +17,35 @@ def generate_report():
         lines = response.text.splitlines()
 
         if len(lines) >= 3:
-            # line 0 = Header, line 1 = Units, line 2 = Latest Data
             latest_row = lines[2].split()
-            
-            # Log the raw row to GitHub Actions console for debugging
-            print(f"RAW_DATA_ROW: {latest_row}")
-
-            # Mapping based on NOAA standard realtime2 format:
-            # Index 5: WDIR, Index 6: WSPD, Index 8: WVHT, Index 9: DPD (Dominant Period)
             
             def clean_val(val, multiplier=1.0):
                 if val.upper() in ["MM", "N/A", "99.00", "999"]:
-                    return "N/A"
+                    return None # Return None for missing data
                 try:
                     num = float(val)
                     return round(num * multiplier, 1)
                 except:
-                    return "N/A"
+                    return None
 
-            # WVHT is in meters, converting to feet
-            data["wvht"] = clean_val(latest_row[8], 3.28)
-            data["swp"] = clean_val(latest_row[9])
-            data["wdir"] = clean_val(latest_row[5])
-            data["wspd"] = clean_val(latest_row[6], 1.94) # m/s to Knots
+            # Wave Data
+            data["wvht"] = clean_val(latest_row[8], 3.28) or "N/A"
+            data["swp"] = clean_val(latest_row[9]) or "N/A"
+            
+            # Wind Data - 42098 specific indices: 5 (Dir), 6 (Speed)
+            wind_dir = clean_val(latest_row[5])
+            wind_spd = clean_val(latest_row[6], 1.94) # m/s to Knots
+
+            if wind_dir is not None and wind_spd is not None:
+                data["wind_display"] = f"{int(wind_dir)}° @ {wind_spd} KTS"
+            else:
+                data["wind_display"] = "OFFLINE" # Cleaner than N/A@ N/A
 
         print(f"PARSED_DATA: {data}")
             
     except Exception as e:
         print(f"ENGINE_ERROR: {e}")
+        data["wind_display"] = "ERROR"
 
     html_content = f"""<!DOCTYPE html>
 <html lang="en">
@@ -65,11 +65,11 @@ def generate_report():
         <div class="header">FROTHING_STATION_REPORT // {station_id}</div>
         <div class="row"><span>WAVE_HEIGHT:</span><span>{data['wvht']} FT</span></div>
         <div class="row"><span>SWELL_PERIOD:</span><span>{data['swp']} SEC</span></div>
-        <div class="row"><span>WIND_COND:</span><span>{data['wdir']}@ {data['wspd']} KTS</span></div>
+        <div class="row"><span>WIND_COND:</span><span>{data['wind_display']}</span></div>
         <div class="row"><span>TIMESTAMP:</span><span>{data['time']}</span></div>
         <div class="legal">
             WARNING: SURFING IS DANGEROUS. INTERPRETIVE DATA ONLY. 
-            USER ASSUMES ALL RISK. VISUAL CHECK REQUIRED.
+            USER ACCUMES ALL RISK. VISUAL CHECK REQUIRED.
         </div>
     </div>
 </body>
