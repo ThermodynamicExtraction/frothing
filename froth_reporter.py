@@ -72,7 +72,7 @@ def generate_report():
                     data["recommendation"] = "MAYBE: BRING THE LOG"
                     data["status_color"] = "#FFA500"
             else:
-                data["recommendation"] = "NO_SURF: STAY HOME"
+                data["recommendation"] = "NO_SURF: GO SKATEBOARDING"
                 data["status_color"] = "#FF0000"
 
     except Exception as e:
