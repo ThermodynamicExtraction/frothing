@@ -14,7 +14,8 @@ def generate_report():
         "wvht": 0.0, "swp": 0.0, "apd": 0.0, "wdir": "N/A", "wspd": 0.0,
         "atmp_val": 0.0, "wtmp_val": 0.0, "time": local_time_str,
         "recommendation": "NO SURF: GO SKATEBOARDING", "status_color": "#000",
-        "surface_state": "UNKNOWN", "water_kit": "CHECK_LOCAL", "beach_kit": "STAY_WARM"
+        "surface_state": "UNKNOWN", "water_kit": "CHECK_LOCAL", 
+        "beach_kit": "STAY_WARM", "beverage": "POUR OVER"
     }
 
     try:
@@ -43,12 +44,16 @@ def generate_report():
             data["atmp_val"] = get_val(13, 1.8, 32) or get_val(14, 1.8, 32)
             data["wtmp_val"] = get_val(14, 1.8, 32) or get_val(15, 1.8, 32)
 
-            # BEACH KIT LOGIC (WIND CHILL)
+            # BEVERAGE LOGIC
             if data["atmp_val"]:
-                # Simple wind chill: subtract 1 degree for every 5kts above 10kts
+                if data["atmp_val"] > 70: data["beverage"] = "COLD BREW"
+                elif data["atmp_val"] >= 60: data["beverage"] = "FLASH CHILL / ICED V60"
+                else: data["beverage"] = "POUR OVER / V60"
+
+            # BEACH KIT LOGIC
+            if data["atmp_val"]:
                 chill_factor = max(0, (data["wspd"] - 10) // 5) if data["wspd"] > 10 else 0
                 feels_like = data["atmp_val"] - chill_factor
-                
                 if feels_like >= 75: data["beach_kit"] = "SHIRT / SHORTS"
                 elif feels_like >= 65: data["beach_kit"] = "LIGHT HOODIE"
                 elif feels_like >= 55: data["beach_kit"] = "WINDBREAKER / PANTS"
@@ -62,7 +67,7 @@ def generate_report():
                 elif t >= 67: data["water_kit"] = "3/2 FULLSUIT"
                 else: data["water_kit"] = "4/3 FULLSUIT"
 
-            # GAUGES & REC (Code preserved from previous version)
+            # GAUGES & REC
             threshold = config.MIN_RIDEABLE_HEIGHT
             bars = max(1, min(5, int((data["wvht"] / threshold) * 1.5))) if data["wvht"] > 0 else 0
             data["ascii_chart"] = ("█" * bars) + ("░" * (5 - bars))
@@ -83,7 +88,7 @@ def generate_report():
 
     except Exception as e: print(f"ERROR: {e}")
 
-    # UI ARCHITECTURE: UPDATED INVENTORY
+    # HTML OUTPUT
     html_content = f"""<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -138,6 +143,11 @@ def generate_report():
         <div class="rec-box">
             <div class="rec-label">SUGGESTED_BEACH_KIT</div>
             <div class="rec-val">{data['beach_kit']}</div>
+        </div>
+
+        <div class="rec-box">
+            <div class="rec-label">SUGGESTED_BEVERAGE</div>
+            <div class="rec-val">{data['beverage']}</div>
         </div>
 
         <div class="legal">
