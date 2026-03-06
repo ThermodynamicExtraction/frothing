@@ -8,6 +8,7 @@
         .inventory { border: 2px solid #000; padding: 20px; max-width: 450px; background: #fff; }
         .header { font-weight: bold; border-bottom: 2px solid #000; padding-bottom: 10px; margin-bottom: 10px; font-size: 1.2em; }
         .row { display: flex; justify-content: space-between; border-bottom: 1px solid #eee; padding: 6px 0; }
+        .temp-row { display: flex; gap: 20px; justify-content: space-between; margin-top: 5px; border-bottom: 1px solid #eee; padding: 6px 0; }
         .rec { margin-top: 20px; padding: 15px; border: 2px solid #000; text-align: center; font-weight: bold; font-size: 1.1em; }
         .legal { font-size: 9px; margin-top: 20px; opacity: 0.6; text-transform: uppercase; }
     </style>
@@ -19,7 +20,13 @@
         <div class="row"><span>SWELL_PERIOD:</span><span>6.0 SEC</span></div>
         <div class="row"><span>AVG_PERIOD (APD):</span><span>3.0 SEC</span></div>
         <div class="row"><span>WIND_COND:</span><span>OFFLINE</span></div>
-        <div class="row"><span>TIMESTAMP:</span><span>2026-03-06 15:11</span></div>
+        
+        <div class="temp-row">
+            <span>AIR_TEMP: 67.6°F</span>
+            <span>WATER_TEMP: N/A°F</span>
+        </div>
+
+        <div class="row"><span>TIMESTAMP:</span><span>2026-03-06 15:14</span></div>
         
         <div class="rec" style="background: #FFA500; color: #000;">
             MAYBE: BRING THE LOG
@@ -27,7 +34,7 @@
 
         <div class="legal">
             WARNING: DATA IS INTERPRETIVE. SURFING CARRIES INHERENT RISK. 
-            CHECK LOCAL CONDITIONS VISUALLY BEFORE ENTRY.
+            CHECK LOCAL CONDITIONS VISUALLY.
         </div>
     </div>
 </body>
