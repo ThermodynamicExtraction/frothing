@@ -8,9 +8,11 @@
         .inventory { border: 2px solid #000; padding: 20px; max-width: 480px; background: #fff; box-shadow: 10px 10px 0px #000; }
         .header { font-weight: bold; border-bottom: 2px solid #000; padding-bottom: 10px; margin-bottom: 10px; font-size: 1.2em; }
         .row { display: flex; justify-content: space-between; border-bottom: 1px solid #000; padding: 6px 0; }
-        .chart-row { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 2px solid #000; align-items: center; }
+        .chart-box { border-bottom: 2px solid #000; padding: 10px 0; }
+        .chart-row { display: flex; justify-content: space-between; align-items: center; }
         .ascii { font-size: 1.5em; letter-spacing: 2px; }
-        .rec-box { margin-top: 15px; border: 2px solid #000; text-align: center; font-weight: bold; overflow: hidden; }
+        .gauge-legend { font-size: 0.75em; text-align: right; color: #666; margin-top: -2px; }
+        .rec-box { margin-top: 15px; border: 2px solid #000; text-align: center; font-weight: bold; }
         .rec-label { font-size: 0.8em; border-bottom: 1px solid #000; padding: 2px; background: #eee; }
         .rec-val { padding: 10px; font-size: 1.1em; text-transform: uppercase; }
         .legal { font-size: 9px; margin-top: 20px; opacity: 0.6; text-transform: uppercase; }
@@ -23,15 +25,18 @@
         <div class="row"><span>WAVE_HEIGHT:</span><span>1.0 FT</span></div>
         <div class="row"><span>SWELL_PERIOD:</span><span>6.0 SEC</span></div>
         
-        <div class="chart-row">
-            <span>WAVE_ENERGY_GAUGE:</span>
-            <span class="ascii">█░░░░</span>
+        <div class="chart-box">
+            <div class="chart-row">
+                <span>WAVE_ENERGY_GAUGE:</span>
+                <span class="ascii">█░░░░</span>
+            </div>
+            <div class="gauge-legend">POWER_LEVEL: FLAT/MICRO</div>
         </div>
 
         <div class="row"><span>SURFACE_STATE:</span><span>GLASSY</span></div>
         <div class="row"><span>WIND_COND:</span><span>CALM</span></div>
         <div class="row"><span>WATER_TEMP:</span><span>67.8°F</span></div>
-        <div class="row" style="border-bottom: 2px solid #000;"><span>TIMESTAMP:</span><span>2026-03-06 15:37</span></div>
+        <div class="row" style="border-bottom: 2px solid #000;"><span>TIMESTAMP:</span><span>2026-03-06 15:43</span></div>
         
         <div class="rec-box">
             <div class="rec-label">ACTION_RECOMMENDATION</div>
@@ -40,7 +45,7 @@
 
         <div class="rec-box">
             <div class="rec-label">SUGGESTED_KIT</div>
-            <div class="rec-val" style="background: #fff;">3/2 FULLSUIT</div>
+            <div class="rec-val">3/2 FULLSUIT</div>
         </div>
 
         <div class="legal">
