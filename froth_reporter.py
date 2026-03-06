@@ -3,23 +3,37 @@ from datetime import datetime, timedelta
 import config
 
 def get_nws_wind():
-    # Venice Municipal Airport (KVNC) Latest Observation
+    """Fetches latest wind from Venice Municipal Airport (KVNC) with unit safety."""
     url = "https://api.weather.gov/stations/KVNC/observations/latest"
     headers = {'User-Agent': '(frothing-engine, contact@example.com)'}
     try:
         r = requests.get(url, headers=headers, timeout=10)
+        r.raise_for_status()
         obs = r.json()['properties']
-        direction = obs['windDirection']['value'] 
-        speed_ms = obs['windSpeed']['value'] 
-        # Convert meters/second to MPH
-        speed_mph = (speed_ms * 2.23694) if speed_ms else 0
+        
+        raw_speed = obs['windSpeed']['value']
+        unit_code = obs['windSpeed']['unitCode'] # e.g., "wmoUnit:m_s-1"
+        direction = obs['windDirection']['value']
+        
+        if raw_speed is None:
+            return None, None
+
+        # Unit Conversion Logic to prevent inflated values
+        if "m_s" in unit_code:
+            speed_mph = raw_speed * 2.23694
+        elif "km_h" in unit_code:
+            speed_mph = raw_speed * 0.621371
+        else:
+            speed_mph = raw_speed # Fallback
+            
         return direction, speed_mph
     except Exception as e:
         print(f"NWS_ERROR: {e}")
         return None, None
 
 def get_cardinal(d):
-    """Converts degrees to cardinal direction string"""
+    """Converts degrees to human-readable cardinal directions."""
+    if d is None: return "N/A"
     dirs = ['N', 'NNE', 'NE', 'ENE', 'E', 'ESE', 'SE', 'SSE', 
             'S', 'SSW', 'SW', 'WSW', 'W', 'WNW', 'NW', 'NNW']
     ix = round(d / (360. / len(dirs)))
@@ -29,10 +43,12 @@ def generate_report():
     station_id = config.STATION_ID
     buoy_url = f"https://www.ndbc.noaa.gov/data/realtime2/{station_id}.txt"
     
+    # Time Setup: EST Offset (-5)
     utc_now = datetime.utcnow()
     est_now = utc_now - timedelta(hours=5)
     local_time_str = est_now.strftime("%Y-%m-%d %H:%M")
 
+    # Fetch Data
     nws_dir, nws_mph = get_nws_wind()
     
     data = {
@@ -64,12 +80,13 @@ def generate_report():
             # 1. CONTEXTUAL WIND LOGIC
             if nws_dir is not None:
                 cardinal = get_cardinal(nws_dir)
+                # Twin Piers Offshore: 20° to 140° (NE to SE)
                 is_offshore = 20 <= nws_dir <= 140
                 dir_label = "OFFSHORE" if is_offshore else "ONSHORE"
                 
-                # REFINED UI STRING: "NE 12 MPH (OFFSHORE)"
-                data["wind_display"] = f"{cardinal} {int(nws_mph)} MPH ({dir_label})"
+                data["wind_display"] = f"{cardinal} {int(round(nws_mph))} MPH ({dir_label})"
                 
+                # SURFACE STATE LOGIC
                 if nws_mph < 6: data["surface_state"] = "GLASSY"
                 elif is_offshore: data["surface_state"] = "CLEAN / LINES"
                 else: data["surface_state"] = "CHOPPY / BLOWN OUT"
@@ -88,13 +105,22 @@ def generate_report():
             elif data["atmp_val"] >= 60: data["beverage"] = "FLASH CHILL / ICED V60"
             else: data["beverage"] = "POUR OVER / V60"
 
+            # BEACH KIT LOGIC (WIND CHILL)
+            chill_factor = max(0, (nws_mph - 10) // 5) if nws_mph and nws_mph > 10 else 0
+            feels_like = data["atmp_val"] - chill_factor
+            if feels_like >= 75: data["beach_kit"] = "SHIRT / SHORTS"
+            elif feels_like >= 65: data["beach_kit"] = "LIGHT HOODIE"
+            elif feels_like >= 55: data["beach_kit"] = "WINDBREAKER / PANTS"
+            else: data["beach_kit"] = "HEAVY PARKA / BEANIE"
+
+            # WATER KIT LOGIC
             t = data["wtmp_val"]
             if t >= 78: data["water_kit"] = "SKIN / BOARDSHORTS"
             elif t >= 72: data["water_kit"] = "1MM TOP / SPRINGSUIT"
             elif t >= 67: data["water_kit"] = "3/2 FULLSUIT"
             else: data["water_kit"] = "4/3 FULLSUIT"
 
-            # 4. ACTION REC
+            # 4. ACTION RECOMMENDATION
             if data["wvht"] >= threshold:
                 if data["swp"] >= config.LONG_PERIOD_THRESHOLD:
                     data["recommendation"] = "SURF: FROTHING"; data["status_color"] = "#00FF00"
