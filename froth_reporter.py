@@ -111,7 +111,7 @@ def generate_report():
 </head>
 <body>
     <div class="inventory">
-        <div class="header">FROTHING REPORT // STATION {station_id}</div>
+        <div class="header">FROTHING REPORT // STATION {station_id} // TWIN PIERS, LBK, FL</div>
         
         <div class="row"><span>WAVE_HEIGHT:</span><span>{data['wvht']} FT</span></div>
         <div class="row"><span>SWELL_PERIOD:</span><span>{data['swp']} SEC</span></div>
