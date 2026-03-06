@@ -1,9 +1,10 @@
 import requests
 from datetime import datetime
-import config # Centralized settings
+import config
 
 def generate_report():
     station_id = config.STATION_ID
+    # Fetching the 'realtime2' text file (Raw observations)
     url = f"https://www.ndbc.noaa.gov/data/realtime2/{station_id}.txt"
     
     data = {
@@ -14,25 +15,37 @@ def generate_report():
     try:
         response = requests.get(url, timeout=15)
         response.raise_for_status()
-        lines = response.readlines()
+        lines = response.text.splitlines()
 
         if len(lines) >= 3:
-            # Line 0: Header 1, Line 1: Header 2 (Units), Line 2: Latest Data
-            latest_data = lines[2].decode('utf-8').split()
+            # line 0 = Header, line 1 = Units, line 2 = Latest Data
+            latest_row = lines[2].split()
             
-            # NOAA Metric to Imperial Conversion (Meters to Feet)
-            raw_wvht = latest_data[8]
-            if raw_wvht != "MM": # MM is NOAA's code for missing data
-                data["wvht"] = round(float(raw_wvht) * 3.28084, 1)
+            # Log the raw row to GitHub Actions console for debugging
+            print(f"RAW_DATA_ROW: {latest_row}")
+
+            # Mapping based on NOAA standard realtime2 format:
+            # Index 5: WDIR, Index 6: WSPD, Index 8: WVHT, Index 9: DPD (Dominant Period)
             
-            data["swp"] = latest_data[9]
-            data["wdir"] = latest_data[5]
-            data["wspd"] = latest_data[6]
-            
-        print(f"SCRAPE_SUCCESS: {data['wvht']}ft @ {data['swp']}s")
+            def clean_val(val, multiplier=1.0):
+                if val.upper() in ["MM", "N/A", "99.00", "999"]:
+                    return "N/A"
+                try:
+                    num = float(val)
+                    return round(num * multiplier, 1)
+                except:
+                    return "N/A"
+
+            # WVHT is in meters, converting to feet
+            data["wvht"] = clean_val(latest_row[8], 3.28)
+            data["swp"] = clean_val(latest_row[9])
+            data["wdir"] = clean_val(latest_row[5])
+            data["wspd"] = clean_val(latest_row[6], 1.94) # m/s to Knots
+
+        print(f"PARSED_DATA: {data}")
             
     except Exception as e:
-        print(f"SCRAPE_FAILED: {e}")
+        print(f"ENGINE_ERROR: {e}")
 
     html_content = f"""<!DOCTYPE html>
 <html lang="en">
@@ -52,11 +65,11 @@ def generate_report():
         <div class="header">FROTHING_STATION_REPORT // {station_id}</div>
         <div class="row"><span>WAVE_HEIGHT:</span><span>{data['wvht']} FT</span></div>
         <div class="row"><span>SWELL_PERIOD:</span><span>{data['swp']} SEC</span></div>
-        <div class="row"><span>WIND_COND:</span><span>{data['wdir']} @ {data['wspd']} KTS</span></div>
+        <div class="row"><span>WIND_COND:</span><span>{data['wdir']}@ {data['wspd']} KTS</span></div>
         <div class="row"><span>TIMESTAMP:</span><span>{data['time']}</span></div>
         <div class="legal">
             WARNING: SURFING IS DANGEROUS. INTERPRETIVE DATA ONLY. 
-            USER ACCUMES ALL RISK. VISUAL CHECK REQUIRED.
+            USER ASSUMES ALL RISK. VISUAL CHECK REQUIRED.
         </div>
     </div>
 </body>
