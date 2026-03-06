@@ -5,30 +5,35 @@ import config
 def get_nws_wind():
     # Venice Municipal Airport (KVNC) Latest Observation
     url = "https://api.weather.gov/stations/KVNC/observations/latest"
-    # NWS requires a User-Agent header
     headers = {'User-Agent': '(frothing-engine, contact@example.com)'}
     try:
         r = requests.get(url, headers=headers, timeout=10)
         obs = r.json()['properties']
-        direction = obs['windDirection']['value'] # Degrees
-        speed_ms = obs['windSpeed']['value'] # meters per second
-        speed_kts = (speed_ms * 1.94384) if speed_ms else 0
-        return direction, speed_kts
+        direction = obs['windDirection']['value'] 
+        speed_ms = obs['windSpeed']['value'] 
+        # Convert meters/second to MPH
+        speed_mph = (speed_ms * 2.23694) if speed_ms else 0
+        return direction, speed_mph
     except Exception as e:
         print(f"NWS_ERROR: {e}")
         return None, None
+
+def get_cardinal(d):
+    """Converts degrees to cardinal direction string"""
+    dirs = ['N', 'NNE', 'NE', 'ENE', 'E', 'ESE', 'SE', 'SSE', 
+            'S', 'SSW', 'SW', 'WSW', 'W', 'WNW', 'NW', 'NNW']
+    ix = round(d / (360. / len(dirs)))
+    return dirs[ix % len(dirs)]
 
 def generate_report():
     station_id = config.STATION_ID
     buoy_url = f"https://www.ndbc.noaa.gov/data/realtime2/{station_id}.txt"
     
-    # Time Setup
     utc_now = datetime.utcnow()
     est_now = utc_now - timedelta(hours=5)
     local_time_str = est_now.strftime("%Y-%m-%d %H:%M")
 
-    # Fetch NWS Wind for LBK Local conditions
-    nws_dir, nws_spd = get_nws_wind()
+    nws_dir, nws_mph = get_nws_wind()
     
     data = {
         "wvht": 0.0, "swp": 0.0, "apd": 0.0, "atmp_val": 0.0, "wtmp_val": 0.0, 
@@ -56,14 +61,16 @@ def generate_report():
             data["atmp_val"] = get_val(13, 1.8, 32) or 0.0
             data["wtmp_val"] = get_val(14, 1.8, 32) or 0.0
 
-            # 1. WIND & SURFACE LOGIC (Using KVNC Venice Airport)
+            # 1. CONTEXTUAL WIND LOGIC
             if nws_dir is not None:
-                # Offshore for LBK is roughly 20 deg to 140 deg (NE to SE)
+                cardinal = get_cardinal(nws_dir)
                 is_offshore = 20 <= nws_dir <= 140
                 dir_label = "OFFSHORE" if is_offshore else "ONSHORE"
-                data["wind_display"] = f"{int(nws_dir)}° @ {int(nws_spd)} KTS ({dir_label})"
                 
-                if nws_spd < 5: data["surface_state"] = "GLASSY"
+                # REFINED UI STRING: "NE 12 MPH (OFFSHORE)"
+                data["wind_display"] = f"{cardinal} {int(nws_mph)} MPH ({dir_label})"
+                
+                if nws_mph < 6: data["surface_state"] = "GLASSY"
                 elif is_offshore: data["surface_state"] = "CLEAN / LINES"
                 else: data["surface_state"] = "CHOPPY / BLOWN OUT"
             else:
@@ -99,7 +106,7 @@ def generate_report():
     except Exception as e:
         print(f"ENGINE_ERROR: {e}")
 
-    # UI ARCHITECTURE (MERGED)
+    # UI ARCHITECTURE
     html_content = f"""<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -124,8 +131,7 @@ def generate_report():
     <div class="inventory">
         <div class="header">FROTHING REPORT // STATION {station_id} // TWIN PIERS, LBK, FL</div>
         
-        <div class="row"><span>WAVE_HEIGHT:</span><span>{data['wvht']} FT</span></div>
-        <div class="row"><span>SWELL_PERIOD:</span><span>{data['swp']} SEC</span></div>
+        <div class="row"><span>WAVE_HEIGHT:</span><span>{data['wvht']} FT</span><span>SWELL_PERIOD:</span><span>{data['swp']} SEC</span></div>
         
         <div class="chart-box">
             <div class="chart-row">
