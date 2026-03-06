@@ -6,16 +6,15 @@ def generate_report():
     station_id = config.STATION_ID
     url = f"https://www.ndbc.noaa.gov/data/realtime2/{station_id}.txt"
     
-    # OFFSET LOGIC: Convert UTC to EST (-5 Hours)
     utc_now = datetime.utcnow()
     est_now = utc_now - timedelta(hours=5)
     local_time_str = est_now.strftime("%Y-%m-%d %H:%M")
 
     data = {
         "wvht": 0.0, "swp": 0.0, "apd": 0.0, "wdir": "N/A", "wspd": 0.0,
-        "atmp": "N/A", "wtmp": 0.0, "time": local_time_str,
+        "atmp_val": 0.0, "wtmp_val": 0.0, "time": local_time_str,
         "recommendation": "NO SURF: GO SKATEBOARDING", "status_color": "#000",
-        "surface_state": "UNKNOWN", "kit": "CHECK_LOCAL", "ascii_chart": "", "gauge_label": ""
+        "surface_state": "UNKNOWN", "water_kit": "CHECK_LOCAL", "beach_kit": "STAY_WARM"
     }
 
     try:
@@ -39,43 +38,52 @@ def generate_report():
             w_dir = get_val(5)
             data["wspd"] = get_val(6, 1.94) or 0.0
             data["wind_display"] = f"{int(w_dir)}° @ {data['wspd']} KTS" if w_dir else "CALM"
-            data["wtmp_val"] = get_val(14, 1.8, 32) or get_val(15, 1.8, 32)
             
-            # ASCII CHART & LEGEND
+            # TEMPERATURES
+            data["atmp_val"] = get_val(13, 1.8, 32) or get_val(14, 1.8, 32)
+            data["wtmp_val"] = get_val(14, 1.8, 32) or get_val(15, 1.8, 32)
+
+            # BEACH KIT LOGIC (WIND CHILL)
+            if data["atmp_val"]:
+                # Simple wind chill: subtract 1 degree for every 5kts above 10kts
+                chill_factor = max(0, (data["wspd"] - 10) // 5) if data["wspd"] > 10 else 0
+                feels_like = data["atmp_val"] - chill_factor
+                
+                if feels_like >= 75: data["beach_kit"] = "SHIRT / SHORTS"
+                elif feels_like >= 65: data["beach_kit"] = "LIGHT HOODIE"
+                elif feels_like >= 55: data["beach_kit"] = "WINDBREAKER / PANTS"
+                else: data["beach_kit"] = "HEAVY PARKA / BEANIE"
+            
+            # WATER KIT LOGIC
+            t = data["wtmp_val"]
+            if t:
+                if t >= 78: data["water_kit"] = "SKIN / BOARDSHORTS"
+                elif t >= 72: data["water_kit"] = "1MM TOP / SPRINGSUIT"
+                elif t >= 67: data["water_kit"] = "3/2 FULLSUIT"
+                else: data["water_kit"] = "4/3 FULLSUIT"
+
+            # GAUGES & REC (Code preserved from previous version)
             threshold = config.MIN_RIDEABLE_HEIGHT
-            bars = 0
-            if data["wvht"] > 0:
-                bars = int((data["wvht"] / threshold) * 1.5)
-                bars = max(1, min(5, bars))
+            bars = max(1, min(5, int((data["wvht"] / threshold) * 1.5))) if data["wvht"] > 0 else 0
             data["ascii_chart"] = ("█" * bars) + ("░" * (5 - bars))
             labels = ["FLAT/MICRO", "SMALL/LOG", "FUN/ACTIVE", "STRONG/SOLID", "HEAVY/FROTH"]
             data["gauge_label"] = labels[bars-1] if bars > 0 else "FLAT"
 
-            # RECOMMENDATION LOGIC
             if data["wvht"] >= threshold:
                 if data["swp"] >= config.LONG_PERIOD_THRESHOLD:
                     data["recommendation"] = "SURF: FROTHING"; data["status_color"] = "#00FF00"
-                elif data["swp"] >= config.WIND_CHOP_MAX_PERIOD:
+                else:
                     data["recommendation"] = "MAYBE: BRING THE LOG"; data["status_color"] = "#FFA500"
             else:
                 data["recommendation"] = "NO SURF: GO SKATEBOARDING"; data["status_color"] = "#FF0000"
 
-            # SURFACE STATE & KIT
             if data["wspd"] < 5: data["surface_state"] = "GLASSY"
             elif data["swp"] > (data["apd"] + 2): data["surface_state"] = "CLEAN / LINES"
             else: data["surface_state"] = "TEXTURED"
 
-            t = data["wtmp_val"]
-            if t:
-                if t >= 78: data["kit"] = "SKIN / BOARDSHORTS"
-                elif t >= 72: data["kit"] = "1MM TOP / SPRINGSUIT"
-                elif t >= 67: data["kit"] = "3/2 FULLSUIT"
-                else: data["kit"] = "4/3 FULLSUIT"
+    except Exception as e: print(f"ERROR: {e}")
 
-    except Exception as e:
-        print(f"ERROR: {e}")
-
-    # UI ARCHITECTURE
+    # UI ARCHITECTURE: UPDATED INVENTORY
     html_content = f"""<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -113,7 +121,8 @@ def generate_report():
 
         <div class="row"><span>SURFACE_STATE:</span><span>{data['surface_state']}</span></div>
         <div class="row"><span>WIND_COND:</span><span>{data['wind_display']}</span></div>
-        <div class="row"><span>WATER_TEMP:</span><span>{data['wtmp_val'] if data['wtmp_val'] else 'N/A'}°F</span></div>
+        <div class="row"><span>AIR_TEMP:</span><span>{data['atmp_val']}°F</span></div>
+        <div class="row"><span>WATER_TEMP:</span><span>{data['wtmp_val']}°F</span></div>
         <div class="row" style="border-bottom: 2px solid #000;"><span>TIMESTAMP (EST):</span><span>{data['time']}</span></div>
         
         <div class="rec-box">
@@ -122,8 +131,13 @@ def generate_report():
         </div>
 
         <div class="rec-box">
-            <div class="rec-label">SUGGESTED_KIT</div>
-            <div class="rec-val">{data['kit']}</div>
+            <div class="rec-label">SUGGESTED_WATER_KIT</div>
+            <div class="rec-val">{data['water_kit']}</div>
+        </div>
+
+        <div class="rec-box">
+            <div class="rec-label">SUGGESTED_BEACH_KIT</div>
+            <div class="rec-val">{data['beach_kit']}</div>
         </div>
 
         <div class="legal">
