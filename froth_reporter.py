@@ -5,9 +5,10 @@ import config
 def get_nws_wind():
     """Fetches latest wind from Venice Municipal Airport (KVNC) with unit safety."""
     url = "https://api.weather.gov/stations/KVNC/observations/latest"
+    # User-Agent is required by NWS API to avoid 403 Forbidden errors
     headers = {'User-Agent': '(frothing-engine, contact@example.com)'}
     try:
-        r = requests.get(url, headers=headers, timeout=10)
+        r = requests.get(url, headers=headers, timeout=15)
         r.raise_for_status()
         obs = r.json()['properties']
         
@@ -18,6 +19,7 @@ def get_nws_wind():
         if raw_speed is None:
             return None, None
 
+        # Unit Conversion Logic (m/s vs km/h)
         if "m_s" in unit_code:
             speed_mph = raw_speed * 2.23694
         elif "km_h" in unit_code:
@@ -42,6 +44,7 @@ def generate_report():
     station_id = config.STATION_ID
     buoy_url = f"https://www.ndbc.noaa.gov/data/realtime2/{station_id}.txt"
     
+    # Time Setup: EST Offset
     utc_now = datetime.utcnow()
     est_now = utc_now - timedelta(hours=5)
     local_time_str = est_now.strftime("%Y-%m-%d %H:%M")
@@ -81,5 +84,30 @@ def generate_report():
                 dir_label = "OFFSHORE" if is_offshore else "ONSHORE"
                 data["wind_display"] = f"{cardinal} {int(round(nws_mph))} MPH ({dir_label})"
                 
-                if nws_mph < 6: data["surface_state"] = "GLASSY"
-                elif
+                if nws_mph < 6: 
+                    data["surface_state"] = "GLASSY"
+                elif is_offshore: 
+                    data["surface_state"] = "CLEAN / LINES"
+                else: 
+                    data["surface_state"] = "CHOPPY / BLOWN OUT"
+            else:
+                data["wind_display"] = "KVNC_OFFLINE"
+
+            # 2. GAUGE LOGIC
+            threshold = config.MIN_RIDEABLE_HEIGHT
+            bars = max(1, min(5, int((data["wvht"] / threshold) * 1.5))) if data["wvht"] > 0 else 0
+            data["ascii_chart"] = ("█" * bars) + ("░" * (5 - bars))
+            labels = ["FLAT/MICRO", "SMALL/LOG", "FUN/ACTIVE", "STRONG/SOLID", "HEAVY/FROTH"]
+            data["gauge_label"] = labels[bars-1] if bars > 0 else "FLAT"
+
+            # 3. ACTION RECOMMENDATION (Pastel Palette)
+            if data["wvht"] >= threshold:
+                if data["swp"] >= config.LONG_PERIOD_THRESHOLD:
+                    data["recommendation"] = "SURF: FROTHING"
+                    data["status_color"] = "#B7E4C7" # Pastel Green
+                else:
+                    data["recommendation"] = "MAYBE: BRING THE LOG"
+                    data["status_color"] = "#FFD8A8" # Pastel Orange
+            else:
+                data["recommendation"] = "NO SURF: GO SKATEBOARDING"
+                data["
