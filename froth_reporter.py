@@ -50,7 +50,7 @@ def generate_report():
     
     data = {
         "wvht": 0.0, "swp": 0.0, "apd": 0.0, "atmp_val": 0.0, "wtmp_val": 0.0, 
-        "time": local_time_str, "status_color": "#000", "surface_state": "UNKNOWN",
+        "time": local_time_str, "status_color": "#EEE", "surface_state": "UNKNOWN",
         "wind_display": "OFFLINE", "water_kit": "CHECK_LOCAL", 
         "beach_kit": "STAY_WARM", "beverage": "POUR OVER", "equipment": "LONGBOARD",
         "ascii_chart": "", "gauge_label": "", "recommendation": "NO SURF: GO SKATEBOARDING"
@@ -87,48 +87,50 @@ def generate_report():
             else:
                 data["wind_display"] = "KVNC_OFFLINE"
 
-            # 2. EQUIPMENT LOGIC
-            # High performance requires height (>=5ft) AND clean conditions or high period
-            if data["wvht"] >= 5 and (data["swp"] >= 8 or "CLEAN" in data["surface_state"]):
-                data["equipment"] = "SHORTBOARD"
-            else:
-                data["equipment"] = "LONGBOARD"
-
-            # 3. GAUGE LOGIC
+            # 2. GAUGE LOGIC
             threshold = config.MIN_RIDEABLE_HEIGHT
             bars = max(1, min(5, int((data["wvht"] / threshold) * 1.5))) if data["wvht"] > 0 else 0
             data["ascii_chart"] = ("█" * bars) + ("░" * (5 - bars))
             labels = ["FLAT/MICRO", "SMALL/LOG", "FUN/ACTIVE", "STRONG/SOLID", "HEAVY/FROTH"]
             data["gauge_label"] = labels[bars-1] if bars > 0 else "FLAT"
 
-            # 4. KITS & BEVERAGE
+            # 3. ACTION REC (Now with Pastel Colors)
+            if data["wvht"] >= threshold:
+                if data["swp"] >= config.LONG_PERIOD_THRESHOLD:
+                    data["recommendation"] = "SURF: FROTHING"
+                    data["status_color"] = "#B7E4C7" # Pastel Green
+                else:
+                    data["recommendation"] = "MAYBE: BRING THE LOG"
+                    data["status_color"] = "#FFD8A8" # Pastel Orange
+            else:
+                data["recommendation"] = "NO SURF: GO SKATEBOARDING"
+                data["status_color"] = "#FFADAD" # Pastel Red
+
+            # 4. EQUIPMENT LOGIC (Integrated Skateboard Check)
+            if data["recommendation"] == "NO SURF: GO SKATEBOARDING":
+                data["equipment"] = "SKATEBOARD"
+            elif data["wvht"] >= 5 and (data["swp"] >= 8 or "CLEAN" in data["surface_state"]):
+                data["equipment"] = "SHORTBOARD"
+            else:
+                data["equipment"] = "LONGBOARD"
+
+            # 5. KITS & BEVERAGE
             if data["atmp_val"] > 70: data["beverage"] = "COLD BREW"
             elif data["atmp_val"] >= 60: data["beverage"] = "FLASH CHILL / ICED V60"
             else: data["beverage"] = "POUR OVER / V60"
 
-            # BEACH KIT
-            chill_factor = max(0, (nws_mph - 10) // 5) if nws_mph and nws_mph > 10 else 0
+            chill_factor = max(0, (nws_mph - 10) // 5) if (nws_mph and nws_mph > 10) else 0
             feels_like = data["atmp_val"] - chill_factor
             if feels_like >= 75: data["beach_kit"] = "SHIRT / SHORTS"
             elif feels_like >= 65: data["beach_kit"] = "LIGHT HOODIE"
             elif feels_like >= 55: data["beach_kit"] = "WINDBREAKER / PANTS"
             else: data["beach_kit"] = "HEAVY PARKA / BEANIE"
 
-            # WATER KIT
             t = data["wtmp_val"]
             if t >= 78: data["water_kit"] = "SKIN / BOARDSHORTS"
             elif t >= 72: data["water_kit"] = "1MM TOP / SPRINGSUIT"
             elif t >= 67: data["water_kit"] = "3/2 FULLSUIT"
             else: data["water_kit"] = "4/3 FULLSUIT"
-
-            # 5. ACTION REC
-            if data["wvht"] >= threshold:
-                if data["swp"] >= config.LONG_PERIOD_THRESHOLD:
-                    data["recommendation"] = "SURF: FROTHING"; data["status_color"] = "#00FF00"
-                else:
-                    data["recommendation"] = "MAYBE: BRING THE LOG"; data["status_color"] = "#FFA500"
-            else:
-                data["recommendation"] = "NO SURF: GO SKATEBOARDING"; data["status_color"] = "#FF0000"
 
     except Exception as e:
         print(f"ENGINE_ERROR: {e}")
@@ -201,7 +203,9 @@ def generate_report():
         </div>
 
         <div class="legal">
-            WARNING: DATA IS INTERPRETIVE. SURFING CARRIES RISK. 
+            WARNING: Surfing and all ocean-related activities are inherently dangerous. The information provided by the Frothing system is a purely mathematical interpretation of raw NOAA buoy data (Station 42098). 
+            The creators and contributors of this project are not liable for any injury, loss, or gear damage resulting from the use of this data or the decision to enter the ocean.
+            DATA IS INTERPRETIVE. SURFING CARRIES RISK. 
             CHECK LOCAL CONDITIONS VISUALLY BEFORE ENTRY.
         </div>
     </div>
