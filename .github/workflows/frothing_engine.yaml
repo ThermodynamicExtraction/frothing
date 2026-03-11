@@ -2,35 +2,37 @@ name: FROTHING_ENGINE_LIVE
 
 on:
   schedule:
-    - cron: '0,30 * * * *' # Auto-run at :00 and :30 of every hour
-  workflow_dispatch:      # Keep your manual button trigger
+    # Runs at 0 and 30 minutes past every hour (UTC)
+    - cron: '0,30 * * * *'
+  workflow_dispatch: # Allows you to trigger it manually via the Actions tab
 
 jobs:
-  run_sync:
+  build:
     runs-on: ubuntu-latest
+    
+    # Permission fix to ensure the bot can push the new index.html
     permissions:
       contents: write
-    
+
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
-        with:
-          fetch-depth: 0 
 
-      - name: Setup Python
-        uses: actions/setup-python@v5 # Updated to v5
+      - name: Set up Python
+        uses: actions/setup-python@v5
         with:
           python-version: '3.10'
 
-      - name: Install Dependencies
-        run: pip install -r requirements.txt
+      - name: Install Requests
+        run: pip install requests
 
-      - name: Run Frothing Engine
+      - name: Run Froth Reporter
         run: python froth_reporter.py
+        env:
+          FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
-      - name: Commit and Push Update
+      - name: Commit and Push Changes
         uses: stefanzweifel/git-auto-commit-action@v5
         with:
-          commit_message: "STATION_42098_UPDATE [skip ci]"
+          commit_message: "FROTH_UPDATE: {timestamp}"
           file_pattern: 'index.html'
-          branch: main
