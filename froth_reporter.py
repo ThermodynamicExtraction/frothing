@@ -140,68 +140,80 @@ def generate_report():
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>FROTHING // {station_id}</title>
     <style>
+        :root {{
+            --bg: #F9F9F7;
+            --white: #ffffff;
+            --black: #000000;
+        }}
+        * {{ box-sizing: border-box; }}
         body {{ 
-            background-color: #F9F9F7; 
-            color: #000; 
+            background-color: var(--bg); 
+            color: var(--black); 
             font-family: monospace; 
             margin: 0; 
             padding: 20px; 
-            line-height: 1.4; 
             display: flex;
             justify-content: center;
+            min-height: 100vh;
         }}
         .inventory {{ 
-            border: 2px solid #000; 
+            border: 2px solid var(--black); 
             padding: 20px; 
             width: 100%;
-            max-width: 550px; 
-            background: #fff; 
-            box-shadow: 10px 10px 0px #000; 
-            box-sizing: border-box;
+            max-width: 500px; 
+            background: var(--white); 
+            box-shadow: 8px 8px 0px var(--black); 
+            height: fit-content;
         }}
-        .header {{ font-weight: bold; border-bottom: 2px solid #000; padding-bottom: 10px; margin-bottom: 10px; font-size: 1.1em; }}
-        .row {{ display: flex; justify-content: space-between; border-bottom: 1px solid #000; padding: 6px 0; font-size: 0.9em; }}
-        .chart-box {{ border-bottom: 2px solid #000; padding: 10px 0; }}
+        .header {{ font-weight: bold; border-bottom: 2px solid var(--black); padding-bottom: 10px; margin-bottom: 10px; font-size: 1rem; }}
+        .row {{ display: flex; justify-content: space-between; border-bottom: 1px solid var(--black); padding: 8px 0; font-size: 0.85rem; }}
+        .chart-box {{ border-bottom: 2px solid var(--black); padding: 10px 0; }}
         .chart-row {{ display: flex; justify-content: space-between; align-items: center; }}
-        .ascii {{ font-size: 1.5em; letter-spacing: 2px; }}
-        .gauge-legend {{ font-size: 0.75em; text-align: right; color: #666; margin-top: -2px; }}
-        .rec-box {{ margin-top: 15px; border: 2px solid #000; text-align: center; font-weight: bold; }}
-        .rec-label {{ font-size: 0.8em; border-bottom: 1px solid #000; padding: 2px; background: #eee; }}
-        .rec-val {{ padding: 10px; font-size: 1.1em; text-transform: uppercase; }}
-        .legal {{ font-size: 9px; margin-top: 20px; opacity: 0.6; text-transform: uppercase; }}
+        .ascii {{ font-size: 1.4rem; letter-spacing: 2px; }}
+        .gauge-legend {{ font-size: 0.7rem; text-align: right; color: #666; margin-top: 2px; }}
+        .rec-box {{ margin-top: 12px; border: 2px solid var(--black); text-align: center; font-weight: bold; }}
+        .rec-label {{ font-size: 0.75rem; border-bottom: 1px solid var(--black); padding: 4px; background: #eee; text-transform: uppercase; }}
+        .rec-val {{ padding: 12px; font-size: 1rem; text-transform: uppercase; }}
+        .legal {{ font-size: 10px; margin-top: 20px; opacity: 0.6; text-transform: uppercase; line-height: 1.2; }}
         
-        /* Mobile Specific Adjustments */
+        /* THE MOBILE FIX */
         @media (max-width: 480px) {{
             body {{ padding: 10px; }}
-            .inventory {{ box-shadow: 5px 5px 0px #000; }}
-            .header {{ font-size: 0.9em; }}
-            .ascii {{ font-size: 1.2em; }}
+            .inventory {{ 
+                padding: 15px;
+                box-shadow: 4px 4px 0px var(--black); 
+                border-width: 2px;
+            }}
+            .header {{ font-size: 0.85rem; }}
+            .row {{ font-size: 0.8rem; }}
+            .ascii {{ font-size: 1.1rem; }}
+            .rec-val {{ font-size: 0.9rem; padding: 10px; }}
         }}
     </style>
 </head>
 <body>
     <div class="inventory">
-        <div class="header">FROTHING REPORT // {station_id} // LBK, FL</div>
+        <div class="header">FROTHING // STATION {station_id} // LBK, FL</div>
         
         <div class="row"><span>WAVE_HEIGHT:</span><span>{data['wvht']} FT</span></div>
         <div class="row"><span>SWELL_PERIOD:</span><span>{data['swp']} SEC</span></div>
         
         <div class="chart-box">
             <div class="chart-row">
-                <span>WAVE_ENERGY_GAUGE:</span>
+                <span>WAVE_ENERGY:</span>
                 <span class="ascii">{data['ascii_chart']}</span>
             </div>
-            <div class="gauge-legend">POWER_LEVEL: {data['gauge_label']}</div>
+            <div class="gauge-legend">{data['gauge_label']}</div>
         </div>
 
-        <div class="row"><span>SURFACE_STATE:</span><span>{data['surface_state']}</span></div>
-        <div class="row"><span>WIND_COND:</span><span>{data['wind_display']}</span></div>
+        <div class="row"><span>SURFACE:</span><span>{data['surface_state']}</span></div>
+        <div class="row"><span>WIND:</span><span>{data['wind_display']}</span></div>
         <div class="row"><span>AIR_TEMP:</span><span>{data['atmp_val']}°F</span></div>
         <div class="row"><span>WATER_TEMP:</span><span>{data['wtmp_val']}°F</span></div>
-        <div class="row" style="border-bottom: 2px solid #000;"><span>TIMESTAMP (EST):</span><span>{data['time']}</span></div>
+        <div class="row" style="border-bottom: 2px solid var(--black);"><span>TIMESTAMP:</span><span>{data['time']}</span></div>
         
         <div class="rec-box">
             <div class="rec-label">ACTION_RECOMMENDATION</div>
@@ -230,7 +242,7 @@ def generate_report():
 
         <div class="legal">
             WARNING: DATA IS INTERPRETIVE. SURFING CARRIES RISK. 
-            CHECK LOCAL CONDITIONS VISUALLY BEFORE ENTRY.
+            ALWAYS CHECK CONDITIONS VISUALLY.
         </div>
     </div>
 </body>
