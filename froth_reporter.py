@@ -135,17 +135,35 @@ def generate_report():
     except Exception as e:
         print(f"ENGINE_ERROR: {e}")
 
-    # UI ARCHITECTURE
+# UI ARCHITECTURE
     html_content = f"""<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>FROTHING // {station_id}</title>
     <style>
-        body {{ background-color: #F9F9F7; color: #000; font-family: monospace; margin: 0; padding: 40px; line-height: 1.4; }}
-        .inventory {{ border: 2px solid #000; padding: 20px; max-width: 550px; background: #fff; box-shadow: 10px 10px 0px #000; }}
+        body {{ 
+            background-color: #F9F9F7; 
+            color: #000; 
+            font-family: monospace; 
+            margin: 0; 
+            padding: 20px; 
+            line-height: 1.4; 
+            display: flex;
+            justify-content: center;
+        }}
+        .inventory {{ 
+            border: 2px solid #000; 
+            padding: 20px; 
+            width: 100%;
+            max-width: 550px; 
+            background: #fff; 
+            box-shadow: 10px 10px 0px #000; 
+            box-sizing: border-box;
+        }}
         .header {{ font-weight: bold; border-bottom: 2px solid #000; padding-bottom: 10px; margin-bottom: 10px; font-size: 1.1em; }}
-        .row {{ display: flex; justify-content: space-between; border-bottom: 1px solid #000; padding: 6px 0; }}
+        .row {{ display: flex; justify-content: space-between; border-bottom: 1px solid #000; padding: 6px 0; font-size: 0.9em; }}
         .chart-box {{ border-bottom: 2px solid #000; padding: 10px 0; }}
         .chart-row {{ display: flex; justify-content: space-between; align-items: center; }}
         .ascii {{ font-size: 1.5em; letter-spacing: 2px; }}
@@ -154,11 +172,19 @@ def generate_report():
         .rec-label {{ font-size: 0.8em; border-bottom: 1px solid #000; padding: 2px; background: #eee; }}
         .rec-val {{ padding: 10px; font-size: 1.1em; text-transform: uppercase; }}
         .legal {{ font-size: 9px; margin-top: 20px; opacity: 0.6; text-transform: uppercase; }}
+        
+        /* Mobile Specific Adjustments */
+        @media (max-width: 480px) {{
+            body {{ padding: 10px; }}
+            .inventory {{ box-shadow: 5px 5px 0px #000; }}
+            .header {{ font-size: 0.9em; }}
+            .ascii {{ font-size: 1.2em; }}
+        }}
     </style>
 </head>
 <body>
     <div class="inventory">
-        <div class="header">FROTHING REPORT // STATION {station_id} // TWIN PIERS, LBK, FL</div>
+        <div class="header">FROTHING REPORT // {station_id} // LBK, FL</div>
         
         <div class="row"><span>WAVE_HEIGHT:</span><span>{data['wvht']} FT</span></div>
         <div class="row"><span>SWELL_PERIOD:</span><span>{data['swp']} SEC</span></div>
@@ -203,9 +229,7 @@ def generate_report():
         </div>
 
         <div class="legal">
-            WARNING: Surfing and all ocean-related activities are inherently dangerous. The information provided by the Frothing system is a purely mathematical interpretation of raw NOAA buoy data (Station 42098). 
-            The creators and contributors of this project are not liable for any injury, loss, or gear damage resulting from the use of this data or the decision to enter the ocean.
-            DATA IS INTERPRETIVE. SURFING CARRIES RISK. 
+            WARNING: DATA IS INTERPRETIVE. SURFING CARRIES RISK. 
             CHECK LOCAL CONDITIONS VISUALLY BEFORE ENTRY.
         </div>
     </div>
