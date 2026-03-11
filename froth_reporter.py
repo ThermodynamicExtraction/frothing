@@ -241,8 +241,10 @@ def generate_report():
         </div>
 
         <div class="legal">
-            WARNING: DATA IS INTERPRETIVE. SURFING CARRIES RISK. 
-            ALWAYS CHECK CONDITIONS VISUALLY.
+            WARNING: Surfing and all ocean-related activities are inherently dangerous. The information provided by the Frothing system is a purely mathematical interpretation of raw NOAA buoy data (Station 42098). 
+            The creators and contributors of this project are not liable for any injury, loss, or gear damage resulting from the use of this data or the decision to enter the ocean.
+            DATA IS INTERPRETIVE. SURFING CARRIES RISK. 
+            CHECK LOCAL CONDITIONS VISUALLY BEFORE ENTRY.
         </div>
     </div>
 </body>
