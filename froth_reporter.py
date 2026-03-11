@@ -42,9 +42,11 @@ def generate_report():
     station_id = config.STATION_ID
     buoy_url = f"https://www.ndbc.noaa.gov/data/realtime2/{station_id}.txt"
     
+    # Time Calculations
     utc_now = datetime.utcnow()
     est_now = utc_now - timedelta(hours=5)
     local_time_str = est_now.strftime("%Y-%m-%d %H:%M")
+    pulse_time = est_now.strftime("%H:%M:%S")
 
     nws_dir, nws_mph = get_nws_wind()
     
@@ -94,7 +96,7 @@ def generate_report():
             labels = ["FLAT/MICRO", "SMALL/LOG", "FUN/ACTIVE", "STRONG/SOLID", "HEAVY/FROTH"]
             data["gauge_label"] = labels[bars-1] if bars > 0 else "FLAT"
 
-            # 3. ACTION REC (Now with Pastel Colors)
+            # 3. ACTION REC (Pastel Palette)
             if data["wvht"] >= threshold:
                 if data["swp"] >= config.LONG_PERIOD_THRESHOLD:
                     data["recommendation"] = "SURF: FROTHING"
@@ -106,7 +108,7 @@ def generate_report():
                 data["recommendation"] = "NO SURF: GO SKATEBOARDING"
                 data["status_color"] = "#FFADAD" # Pastel Red
 
-            # 4. EQUIPMENT LOGIC (Integrated Skateboard Check)
+            # 4. EQUIPMENT LOGIC
             if data["recommendation"] == "NO SURF: GO SKATEBOARDING":
                 data["equipment"] = "SKATEBOARD"
             elif data["wvht"] >= 5 and (data["swp"] >= 8 or "CLEAN" in data["surface_state"]):
@@ -135,7 +137,7 @@ def generate_report():
     except Exception as e:
         print(f"ENGINE_ERROR: {e}")
 
-# UI ARCHITECTURE
+    # HTML UI ARCHITECTURE
     html_content = f"""<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -147,30 +149,15 @@ def generate_report():
     <meta http-equiv="Expires" content="0">
     <title>FROTHING // {station_id}</title>
     <style>
-        :root {{
-            --bg: #F9F9F7;
-            --white: #ffffff;
-            --black: #000000;
-        }}
+        :root {{ --bg: #F9F9F7; --white: #ffffff; --black: #000000; }}
         * {{ box-sizing: border-box; }}
         body {{ 
-            background-color: var(--bg); 
-            color: var(--black); 
-            font-family: monospace; 
-            margin: 0; 
-            padding: 20px; 
-            display: flex;
-            justify-content: center;
-            min-height: 100vh;
+            background-color: var(--bg); color: var(--black); font-family: monospace; 
+            margin: 0; padding: 20px; display: flex; justify-content: center; min-height: 100vh; 
         }}
         .inventory {{ 
-            border: 2px solid var(--black); 
-            padding: 20px; 
-            width: 100%;
-            max-width: 500px; 
-            background: var(--white); 
-            box-shadow: 8px 8px 0px var(--black); 
-            height: fit-content;
+            border: 2px solid var(--black); padding: 20px; width: 100%; max-width: 500px; 
+            background: var(--white); box-shadow: 8px 8px 0px var(--black); height: fit-content; 
         }}
         .header {{ font-weight: bold; border-bottom: 2px solid var(--black); padding-bottom: 10px; margin-bottom: 10px; font-size: 1rem; }}
         .row {{ display: flex; justify-content: space-between; border-bottom: 1px solid var(--black); padding: 8px 0; font-size: 0.85rem; }}
@@ -183,18 +170,12 @@ def generate_report():
         .rec-val {{ padding: 12px; font-size: 1rem; text-transform: uppercase; }}
         .legal {{ font-size: 10px; margin-top: 20px; opacity: 0.6; text-transform: uppercase; line-height: 1.2; }}
         
-        /* THE MOBILE FIX */
         @media (max-width: 480px) {{
             body {{ padding: 10px; }}
-            .inventory {{ 
-                padding: 15px;
-                box-shadow: 4px 4px 0px var(--black); 
-                border-width: 2px;
-            }}
+            .inventory {{ padding: 15px; box-shadow: 4px 4px 0px var(--black); }}
             .header {{ font-size: 0.85rem; }}
             .row {{ font-size: 0.8rem; }}
             .ascii {{ font-size: 1.1rem; }}
-            .rec-val {{ font-size: 0.9rem; padding: 10px; }}
         }}
     </style>
 </head>
@@ -224,32 +205,16 @@ def generate_report():
             <div class="rec-val" style="background: {data['status_color']};">{data['recommendation']}</div>
         </div>
 
-        <div class="rec-box">
-            <div class="rec-label">SUGGESTED_EQUIPMENT</div>
-            <div class="rec-val">{data['equipment']}</div>
+        <div class="rec-box"><div class="rec-label">SUGGESTED_EQUIPMENT</div><div class="rec-val">{data['equipment']}</div></div>
+        <div class="rec-box"><div class="rec-label">SUGGESTED_WATER_KIT</div><div class="rec-val">{data['water_kit']}</div></div>
+        <div class="rec-box"><div class="rec-label">SUGGESTED_BEACH_KIT</div><div class="rec-val">{data['beach_kit']}</div></div>
+        <div class="rec-box"><div class="rec-label">SUGGESTED_BEVERAGE</div><div class="rec-val">{data['beverage']}</div></div>
+
+        <div class="row" style="border: none; font-size: 0.7rem; opacity: 0.4; justify-content: center; margin-top: 15px;">
+            <span>ENGINE_PULSE: {pulse_time} EST</span>
         </div>
 
-        <div class="rec-box">
-            <div class="rec-label">SUGGESTED_WATER_KIT</div>
-            <div class="rec-val">{data['water_kit']}</div>
-        </div>
-
-        <div class="rec-box">
-            <div class="rec-label">SUGGESTED_BEACH_KIT</div>
-            <div class="rec-val">{data['beach_kit']}</div>
-        </div>
-
-        <div class="rec-box">
-            <div class="rec-label">SUGGESTED_BEVERAGE</div>
-            <div class="rec-val">{data['beverage']}</div>
-        </div>
-
-        <div class="legal">
-            WARNING: Surfing and all ocean-related activities are inherently dangerous. The information provided by the Frothing system is a purely mathematical interpretation of raw NOAA buoy data (Station 42098). 
-            The creators and contributors of this project are not liable for any injury, loss, or gear damage resulting from the use of this data or the decision to enter the ocean.
-            DATA IS INTERPRETIVE. SURFING CARRIES RISK. 
-            CHECK LOCAL CONDITIONS VISUALLY BEFORE ENTRY.
-        </div>
+        <div class="legal">WARNING: DATA IS INTERPRETIVE. SURFING CARRIES RISK. ALWAYS CHECK CONDITIONS VISUALLY.</div>
     </div>
 </body>
 </html>"""
