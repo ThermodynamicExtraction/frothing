@@ -141,6 +141,7 @@ def generate_report():
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta http-equiv="refresh" content="1800">
     <title>FROTHING // {station_id}</title>
     <style>
         :root {{
