@@ -137,7 +137,7 @@ def generate_report():
     except Exception as e:
         print(f"ENGINE_ERROR: {e}")
 
-    # HTML UI ARCHITECTURE
+# UI ARCHITECTURE
     html_content = f"""<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -145,80 +145,121 @@ def generate_report():
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta http-equiv="refresh" content="1800">
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-    <meta http-equiv="Pragma" content="no-cache">
-    <meta http-equiv="Expires" content="0">
     <title>FROTHING // {station_id}</title>
     <style>
-        :root {{ --bg: #F9F9F7; --white: #ffffff; --black: #000000; }}
+        :root {{ --bg: #F9F9F7; --white: #ffffff; --black: #000000; --pastel: #e0e0e0; }}
         * {{ box-sizing: border-box; }}
-        body {{ 
-            background-color: var(--bg); color: var(--black); font-family: monospace; 
-            margin: 0; padding: 20px; display: flex; justify-content: center; min-height: 100vh; 
-        }}
-        .inventory {{ 
-            border: 2px solid var(--black); padding: 20px; width: 100%; max-width: 500px; 
-            background: var(--white); box-shadow: 8px 8px 0px var(--black); height: fit-content; 
-        }}
-        .header {{ font-weight: bold; border-bottom: 2px solid var(--black); padding-bottom: 10px; margin-bottom: 10px; font-size: 1rem; }}
-        .row {{ display: flex; justify-content: space-between; border-bottom: 1px solid var(--black); padding: 8px 0; font-size: 0.85rem; }}
-        .chart-box {{ border-bottom: 2px solid var(--black); padding: 10px 0; }}
-        .chart-row {{ display: flex; justify-content: space-between; align-items: center; }}
-        .ascii {{ font-size: 1.4rem; letter-spacing: 2px; }}
-        .gauge-legend {{ font-size: 0.7rem; text-align: right; color: #666; margin-top: 2px; }}
-        .rec-box {{ margin-top: 12px; border: 2px solid var(--black); text-align: center; font-weight: bold; }}
-        .rec-label {{ font-size: 0.75rem; border-bottom: 1px solid var(--black); padding: 4px; background: #eee; text-transform: uppercase; }}
-        .rec-val {{ padding: 12px; font-size: 1rem; text-transform: uppercase; }}
-        .legal {{ font-size: 10px; margin-top: 20px; opacity: 0.6; text-transform: uppercase; line-height: 1.2; }}
+        body {{ background-color: var(--bg); color: var(--black); font-family: monospace; margin: 0; padding: 20px; }}
         
-        @media (max-width: 480px) {{
-            body {{ padding: 10px; }}
-            .inventory {{ padding: 15px; box-shadow: 4px 4px 0px var(--black); }}
-            .header {{ font-size: 0.85rem; }}
-            .row {{ font-size: 0.8rem; }}
-            .ascii {{ font-size: 1.1rem; }}
+        .main-container {{ 
+            display: flex; gap: 20px; justify-content: center; align-items: flex-start; max-width: 1100px; margin: 0 auto; 
+        }}
+
+        /* REPORT SIDE */
+        .inventory {{ 
+            border: 2px solid var(--black); padding: 20px; width: 100%; max-width: 450px; 
+            background: var(--white); box-shadow: 8px 8px 0px var(--black); 
+        }}
+        .header {{ font-weight: bold; border-bottom: 2px solid var(--black); padding-bottom: 10px; margin-bottom: 10px; }}
+        .row {{ display: flex; justify-content: space-between; border-bottom: 1px solid var(--black); padding: 8px 0; font-size: 0.85rem; }}
+        .rec-box {{ margin-top: 12px; border: 2px solid var(--black); text-align: center; font-weight: bold; }}
+        .rec-label {{ font-size: 0.75rem; border-bottom: 1px solid var(--black); padding: 4px; background: #eee; }}
+        .rec-val {{ padding: 12px; font-size: 1rem; text-transform: uppercase; }}
+
+        /* CHARACTER CREATOR SIDE */
+        .creator-box {{
+            border: 2px solid var(--black); padding: 20px; width: 100%; max-width: 400px;
+            background: var(--white); box-shadow: 8px 8px 0px var(--black); text-align: center;
+        }}
+        .stage {{ 
+            height: 300px; border: 1px solid #ddd; margin-bottom: 20px; position: relative;
+            background: #f0f0f0; display: flex; flex-direction: column; align-items: center; justify-content: center;
+        }}
+        .part-layer {{ font-weight: bold; font-size: 1.2rem; margin: 5px; padding: 10px; border: 1px dashed #aaa; width: 80%; background: white; }}
+        
+        .control-row {{ display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; background: #f9f9f9; padding: 5px; border: 1px solid #000; }}
+        .nav-btn {{ background: #000; color: #fff; border: none; padding: 5px 15px; cursor: pointer; font-family: monospace; font-weight: bold; }}
+        .nav-btn:active {{ background: #444; }}
+        .part-label {{ font-size: 0.8rem; text-transform: uppercase; font-weight: bold; }}
+
+        @media (max-width: 900px) {{
+            .main-container {{ flex-direction: column; align-items: center; }}
+            .inventory, .creator-box {{ max-width: 100%; }}
         }}
     </style>
 </head>
 <body>
-    <div class="inventory">
-        <div class="header">FROTHING // STATION {station_id} // LBK, FL</div>
-        
-        <div class="row"><span>WAVE_HEIGHT:</span><span>{data['wvht']} FT</span></div>
-        <div class="row"><span>SWELL_PERIOD:</span><span>{data['swp']} SEC</span></div>
-        
-        <div class="chart-box">
-            <div class="chart-row">
-                <span>WAVE_ENERGY:</span>
-                <span class="ascii">{data['ascii_chart']}</span>
+    <div class="main-container">
+        <div class="inventory">
+            <div class="header">FROTHING // STATION {station_id}</div>
+            <div class="row"><span>WAVE_HEIGHT:</span><span>{data['wvht']} FT</span></div>
+            <div class="row"><span>SWELL_PERIOD:</span><span>{data['swp']} SEC</span></div>
+            <div class="row"><span>WIND:</span><span>{data['wind_display']}</span></div>
+            <div class="row" style="border-bottom: 2px solid var(--black);"><span>TIMESTAMP:</span><span>{data['time']}</span></div>
+            
+            <div class="rec-box">
+                <div class="rec-label">ACTION_RECOMMENDATION</div>
+                <div class="rec-val" style="background: {data['status_color']};">{data['recommendation']}</div>
             </div>
-            <div class="gauge-legend">{data['gauge_label']}</div>
+            <div class="rec-box"><div class="rec-label">SUGGESTED_EQUIPMENT</div><div class="rec-val">{data['equipment']}</div></div>
+            
+            <div class="row" style="border: none; font-size: 0.7rem; opacity: 0.4; justify-content: center; margin-top: 15px;">
+                <span>ENGINE_PULSE: {pulse_time} EST</span>
+            </div>
         </div>
 
-        <div class="row"><span>SURFACE:</span><span>{data['surface_state']}</span></div>
-        <div class="row"><span>WIND:</span><span>{data['wind_display']}</span></div>
-        <div class="row"><span>AIR_TEMP:</span><span>{data['atmp_val']}°F</span></div>
-        <div class="row"><span>WATER_TEMP:</span><span>{data['wtmp_val']}°F</span></div>
-        <div class="row" style="border-bottom: 2px solid var(--black);"><span>TIMESTAMP:</span><span>{data['time']}</span></div>
-        
-        <div class="rec-box">
-            <div class="rec-label">ACTION_RECOMMENDATION</div>
-            <div class="rec-val" style="background: {data['status_color']};">{data['recommendation']}</div>
+        <div class="creator-box">
+            <div class="header">SURFER_CONSTRUCTOR_V1</div>
+            
+            <div class="stage" id="surfer-stage">
+                <div id="display-head" class="part-layer">HEAD</div>
+                <div id="display-torso" class="part-layer">TORSO</div>
+                <div id="display-bottom" class="part-layer">BOTTOM</div>
+                <div id="display-board" class="part-layer">BOARD</div>
+            </div>
+
+            <div id="controls"></div>
         </div>
-
-        <div class="rec-box"><div class="rec-label">SUGGESTED_EQUIPMENT</div><div class="rec-val">{data['equipment']}</div></div>
-        <div class="rec-box"><div class="rec-label">SUGGESTED_WATER_KIT</div><div class="rec-val">{data['water_kit']}</div></div>
-        <div class="rec-box"><div class="rec-label">SUGGESTED_BEACH_KIT</div><div class="rec-val">{data['beach_kit']}</div></div>
-        <div class="rec-box"><div class="rec-label">SUGGESTED_BEVERAGE</div><div class="rec-val">{data['beverage']}</div></div>
-
-        <div class="row" style="border: none; font-size: 0.7rem; opacity: 0.4; justify-content: center; margin-top: 15px;">
-            <span>ENGINE_PULSE: {pulse_time} EST</span>
-        </div>
-
-        <div class="legal">WARNING: Surfing and all ocean-related activities are inherently dangerous. The information provided by the Frothing system is a purely mathematical interpretation of raw NOAA buoy data (Station 42098). 
-            The creators and contributors of this project are not liable for any injury, loss, or gear damage resulting from the use of this data or the decision to enter the ocean.
-            DATA IS INTERPRETIVE. SURFING CARRIES RISK. 
-            CHECK LOCAL CONDITIONS VISUALLY BEFORE ENTRY.</div>
     </div>
+
+    <script>
+        const parts = {{
+            head: ["MALE_A", "MALE_B", "FEMALE_A", "FEMALE_B"],
+            torso: ["WETSUIT_32", "RASH_GUARD", "BARE_CHEST", "HOODIE"],
+            bottom: ["BOARDSHORTS", "WETSUIT_PANTS", "SPEEDO", "LEGGINGS"],
+            board: ["FISH", "SHORTBOARD", "FUNBOARD", "LONGBOARD"]
+        }};
+
+        let selection = {{ head: 0, torso: 0, bottom: 0, board: 0 }};
+
+        function updateDisplay() {{
+            for (let type in selection) {{
+                document.getElementById(`display-${{type}}`).innerText = parts[type][selection[type]];
+            }}
+        }}
+
+        function cycle(type, direction) {{
+            selection[type] = (selection[type] + direction + 4) % 4;
+            updateDisplay();
+        }}
+
+        function createControls() {{
+            const container = document.getElementById('controls');
+            for (let type in parts) {{
+                const row = document.createElement('div');
+                row.className = 'control-row';
+                row.innerHTML = `
+                    <button class="nav-btn" onclick="cycle('${{type}}', -1)"><</button>
+                    <span class="part-label">${{type}}</span>
+                    <button class="nav-btn" onclick="cycle('${{type}}', 1)">></button>
+                `;
+                container.appendChild(row);
+            }}
+        }}
+
+        createControls();
+        updateDisplay();
+    </script>
 </body>
 </html>"""
 
