@@ -7,118 +7,117 @@
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <title>FROTHING // 42098</title>
     <style>
-        :root { --bg: #F9F9F7; --white: #ffffff; --black: #000000; --pastel: #e0e0e0; }
+        :root { --bg: #F9F9F7; --white: #ffffff; --black: #000000; }
         * { box-sizing: border-box; }
         body { background-color: var(--bg); color: var(--black); font-family: monospace; margin: 0; padding: 20px; }
+        .main-container { display: flex; gap: 20px; justify-content: center; align-items: flex-start; max-width: 1000px; margin: 0 auto; }
         
-        .main-container { 
-            display: flex; gap: 20px; justify-content: center; align-items: flex-start; max-width: 1100px; margin: 0 auto; 
+        .inventory, .creator-box { 
+            border: 2px solid var(--black); padding: 20px; background: var(--white); 
+            box-shadow: 8px 8px 0px var(--black); width: 100%;
         }
-
-        /* REPORT SIDE */
-        .inventory { 
-            border: 2px solid var(--black); padding: 20px; width: 100%; max-width: 450px; 
-            background: var(--white); box-shadow: 8px 8px 0px var(--black); 
-        }
+        .inventory { max-width: 450px; }
+        .creator-box { max-width: 400px; text-align: center; }
+        
         .header { font-weight: bold; border-bottom: 2px solid var(--black); padding-bottom: 10px; margin-bottom: 10px; }
         .row { display: flex; justify-content: space-between; border-bottom: 1px solid var(--black); padding: 8px 0; font-size: 0.85rem; }
         .rec-box { margin-top: 12px; border: 2px solid var(--black); text-align: center; font-weight: bold; }
         .rec-label { font-size: 0.75rem; border-bottom: 1px solid var(--black); padding: 4px; background: #eee; }
         .rec-val { padding: 12px; font-size: 1rem; text-transform: uppercase; }
 
-        /* CHARACTER CREATOR SIDE */
-        .creator-box {
-            border: 2px solid var(--black); padding: 20px; width: 100%; max-width: 400px;
-            background: var(--white); box-shadow: 8px 8px 0px var(--black); text-align: center;
-        }
-        .stage { 
-            height: 300px; border: 1px solid #ddd; margin-bottom: 20px; position: relative;
-            background: #f0f0f0; display: flex; flex-direction: column; align-items: center; justify-content: center;
-        }
-        .part-layer { font-weight: bold; font-size: 1.2rem; margin: 5px; padding: 10px; border: 1px dashed #aaa; width: 80%; background: white; }
+        /* CHARACTER SYSTEM */
+        .stage { height: 320px; margin-bottom: 20px; position: relative; background: #f0f0f0; border: 1px solid #000; overflow: hidden; }
+        .avatar-part { position: absolute; left: 50%; transform: translateX(-50%); transition: all 0.2s; }
         
-        .control-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; background: #f9f9f9; padding: 5px; border: 1px solid #000; }
-        .nav-btn { background: #000; color: #fff; border: none; padding: 5px 15px; cursor: pointer; font-family: monospace; font-weight: bold; }
-        .nav-btn:active { background: #444; }
-        .part-label { font-size: 0.8rem; text-transform: uppercase; font-weight: bold; }
+        #display-head { top: 30px; width: 50px; height: 50px; border-radius: 50%; border: 2px solid #000; z-index: 4; }
+        #display-torso { top: 80px; width: 70px; height: 80px; border: 2px solid #000; z-index: 3; border-radius: 5px; }
+        #display-bottom { top: 160px; width: 70px; height: 60px; border: 2px solid #000; z-index: 2; }
+        #display-board { top: 40px; left: 75%; width: 40px; height: 240px; border: 2px solid #000; border-radius: 50% 50% 20% 20%; z-index: 1; }
 
-        @media (max-width: 900px) {
-            .main-container { flex-direction: column; align-items: center; }
-            .inventory, .creator-box { max-width: 100%; }
-        }
+        .control-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; border: 1px solid #000; padding: 4px; }
+        .nav-btn { background: #000; color: #fff; border: none; padding: 5px 12px; cursor: pointer; font-weight: bold; }
+        .part-label { font-size: 0.7rem; text-transform: uppercase; font-weight: bold; }
+        .selection-name { font-size: 0.75rem; color: #555; }
+
+        @media (max-width: 850px) { .main-container { flex-direction: column; align-items: center; } }
     </style>
 </head>
 <body>
     <div class="main-container">
         <div class="inventory">
-            <div class="header">FROTHING // STATION 42098</div>
-            <div class="row"><span>WAVE_HEIGHT:</span><span>2.3 FT</span></div>
+            <div class="header">FROTHING // 42098</div>
+            <div class="row"><span>WAVE_HEIGHT:</span><span>2.6 FT</span></div>
             <div class="row"><span>SWELL_PERIOD:</span><span>5.0 SEC</span></div>
-            <div class="row"><span>WIND:</span><span>KVNC_OFFLINE</span></div>
-            <div class="row" style="border-bottom: 2px solid var(--black);"><span>TIMESTAMP:</span><span>2026-03-16 09:56</span></div>
+            <div class="row"><span>SURFACE:</span><span>CHOPPY / BLOWN OUT</span></div>
+            <div class="row"><span>WIND:</span><span>S 16 MPH (ONSHORE)</span></div>
+            <div class="row" style="border-bottom: 2px solid var(--black);"><span>PULSE (EST):</span><span>10:03:37</span></div>
             
-            <div class="rec-box">
-                <div class="rec-label">ACTION_RECOMMENDATION</div>
-                <div class="rec-val" style="background: #FFD8A8;">MAYBE: BRING THE LOG</div>
-            </div>
-            <div class="rec-box"><div class="rec-label">SUGGESTED_EQUIPMENT</div><div class="rec-val">LONGBOARD</div></div>
-            
-            <div class="row" style="border: none; font-size: 0.7rem; opacity: 0.4; justify-content: center; margin-top: 15px;">
-                <span>ENGINE_PULSE: 09:56:44 EST</span>
-            </div>
+            <div class="rec-box"><div class="rec-label">RECOMMENDATION</div><div class="rec-val" style="background: #FFD8A8;">MAYBE: BRING THE LOG</div></div>
+            <div class="rec-box"><div class="rec-label">EQUIPMENT</div><div class="rec-val">LONGBOARD</div></div>
         </div>
 
         <div class="creator-box">
-            <div class="header">SURFER_CONSTRUCTOR_V1</div>
-            
-            <div class="stage" id="surfer-stage">
-                <div id="display-head" class="part-layer">HEAD</div>
-                <div id="display-torso" class="part-layer">TORSO</div>
-                <div id="display-bottom" class="part-layer">BOTTOM</div>
-                <div id="display-board" class="part-layer">BOARD</div>
+            <div class="header">SURFER_CONSTRUCTOR</div>
+            <div class="stage">
+                <div id="display-board" class="avatar-part"></div>
+                <div id="display-head" class="avatar-part"></div>
+                <div id="display-torso" class="avatar-part"></div>
+                <div id="display-bottom" class="avatar-part"></div>
             </div>
-
             <div id="controls"></div>
         </div>
     </div>
 
     <script>
-        const parts = {
-            head: ["MALE_A", "MALE_B", "FEMALE_A", "FEMALE_B"],
-            torso: ["WETSUIT_32", "RASH_GUARD", "BARE_CHEST", "HOODIE"],
-            bottom: ["BOARDSHORTS", "WETSUIT_PANTS", "SPEEDO", "LEGGINGS"],
-            board: ["FISH", "SHORTBOARD", "FUNBOARD", "LONGBOARD"]
+        const config = {
+            head: [
+                { name: "MALE_A", color: "#FFDBAC" }, { name: "MALE_B", color: "#8D5524" },
+                { name: "FEMALE_A", color: "#F1C27D" }, { name: "FEMALE_B", color: "#C68642" }
+            ],
+            torso: [
+                { name: "VINTAGE_TEE", color: "#FFADAD" }, { name: "WETSUIT_32", color: "#222" },
+                { name: "RASH_GUARD", color: "#A0C4FF" }, { name: "HOODIE", color: "#9BF6FF" }
+            ],
+            bottom: [
+                { name: "BOARDSHORTS", color: "#CAFFBF" }, { name: "WETSUIT_LEG", color: "#222" },
+                { name: "SPEEDO", color: "#FDFFB6" }, { name: "LEGGINGS", color: "#FFD6A5" }
+            ],
+            board: [
+                { name: "FISH", color: "#FFC6FF", h: "180px" }, { name: "SHORT", color: "#FFFFFC", h: "210px" },
+                { name: "FUN", color: "#BDB2FF", h: "250px" }, { name: "LONG", color: "#99E2B4", h: "300px" }
+            ]
         };
 
         let selection = { head: 0, torso: 0, bottom: 0, board: 0 };
 
-        function updateDisplay() {
+        function update() {
             for (let type in selection) {
-                document.getElementById(`display-${type}`).innerText = parts[type][selection[type]];
+                const el = document.getElementById(`display-${type}`);
+                const item = config[type][selection[type]];
+                el.style.backgroundColor = item.color;
+                if(item.h) el.style.height = item.h;
+                document.getElementById(`label-${type}`).innerText = item.name;
             }
         }
 
-        function cycle(type, direction) {
-            selection[type] = (selection[type] + direction + 4) % 4;
-            updateDisplay();
+        function cycle(type, dir) {
+            selection[type] = (selection[type] + dir + 4) % 4;
+            update();
         }
 
-        function createControls() {
-            const container = document.getElementById('controls');
-            for (let type in parts) {
-                const row = document.createElement('div');
-                row.className = 'control-row';
-                row.innerHTML = `
-                    <button class="nav-btn" onclick="cycle('${type}', -1)"><</button>
-                    <span class="part-label">${type}</span>
-                    <button class="nav-btn" onclick="cycle('${type}', 1)">></button>
-                `;
-                container.appendChild(row);
-            }
+        const ctrl = document.getElementById('controls');
+        for (let type in config) {
+            const row = document.createElement('div');
+            row.className = 'control-row';
+            row.innerHTML = `<button class="nav-btn" onclick="cycle('${type}',-1)"><</button>
+                             <div style="display:flex; flex-direction:column;">
+                                <span class="part-label">${type}</span>
+                                <span class="selection-name" id="label-${type}"></span>
+                             </div>
+                             <button class="nav-btn" onclick="cycle('${type}',1)">></button>`;
+            ctrl.appendChild(row);
         }
-
-        createControls();
-        updateDisplay();
+        update();
     </script>
 </body>
 </html>
